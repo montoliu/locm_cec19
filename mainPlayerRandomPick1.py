@@ -1,7 +1,5 @@
-# This agent select always the first card on the draft phase
-# In the battle phase selects randomly the next action to do
-import sys
 import random
+import sys
 
 
 # ------------------------------------------------------------
@@ -20,8 +18,7 @@ class Player:
 # Card information
 # ------------------------------------------------------------
 class Card:
-    def __init__(self, card_id, instance_id, location, card_type, cost, attack, defense, abilities, my_health_change,
-                 opponent_health_change, card_draw, lane):
+    def __init__(self, card_id, instance_id, location, card_type, cost, attack, defense, abilities, my_health_change, opponent_health_change, card_draw, lane):
         self.card_id = card_id
         self.instance_id = instance_id
         self.location = location
@@ -35,8 +32,23 @@ class Card:
         self.card_draw = card_draw
         self.lane = lane
 
+    def has_breakthrough(self):
+        return 'B' in self.abilities
+
     def has_charge(self):
         return 'C' in self.abilities
+
+    def has_drain(self):
+        return 'D' in self.abilities
+
+    def has_guard(self):
+        return 'G' in self.abilities
+
+    def has_lethal(self):
+        return 'L' in self.abilities
+
+    def has_ward(self):
+        return 'W' in self.abilities
 
 
 # ------------------------------------------------------------
@@ -73,6 +85,7 @@ class State:
             self.classify_cards()
             self.get_all_valid_action()
 
+            # DEBUG
             print("l_cards_on_player_hand: " + str(len(self.l_cards_on_player_hand)), file=sys.stderr)
             print("l_cards_on_left_lane_player: " + str(len(self.l_cards_on_left_lane_player)), file=sys.stderr)
             print("l_cards_on_left_lane_opponent: " + str(len(self.l_cards_on_left_lane_opponent)), file=sys.stderr)
@@ -81,7 +94,31 @@ class State:
             print("l_actions: " + str(len(self.l_actions)), file=sys.stderr)
             print(self.l_actions, file=sys.stderr)
 
-    # TODO charge ability
+    # ---------------------------------------
+    # Classify each card in the corresponding list (only if cost <= player mana)
+    # Can attack cards on the players lane (already summoned)
+    # Can be summoned criatures on the hand
+    # Can be used items on the hand
+    def classify_cards(self):
+        for c in self.l_cards:
+            if c.location == self.LOCATION_IN_HAND:
+                self.l_cards_on_player_hand.append(c)
+            elif c.location == self.LOCATION_PLAYER_SIDE and c.lane == self.LANE_LEFT:
+                self.l_cards_on_left_lane_player.append(c)
+            elif c.location == self.LOCATION_OPPONENT_SIDE and c.lane == self.LANE_LEFT:
+                self.l_cards_on_left_lane_opponent.append(c)
+            elif c.location == self.LOCATION_PLAYER_SIDE and c.lane == self.LANE_RIGHT:
+                self.l_cards_on_right_lane_player.append(c)
+            elif c.location == self.LOCATION_OPPONENT_SIDE and c.lane == self.LANE_RIGHT:
+                self.l_cards_on_right_lane_opponent.append(c)
+
+    # ---------------------------------------
+    # return true is the game is in the draft phase
+    def is_draft_phase(self):
+        return self.player1.mana == 0
+
+    # ---------------------------------------
+    # TODO hay que cambiar muchas cosas
     def get_all_valid_action(self):
         # for all cards on player hands
         for c in self.l_cards_on_player_hand:
@@ -110,54 +147,25 @@ class State:
 
         # for all cards on player left side of the board
         for c in self.l_cards_on_left_lane_player:
-            if c.cost <= self.player1.mana:
-                # ATTACK to opponent card
-                for c_left in self.l_cards_on_left_lane_opponent:
-                    self.l_actions.append("ATTACK " + str(c.instance_id) + " " + str(c_left.instance_id))
-                for c_right in self.l_cards_on_right_lane_opponent:
-                    self.l_actions.append("ATTACK " + str(c.instance_id) + " " + str(c_right.instance_id))
-                # ATTACK to opponent
-                self.l_actions.append("ATTACK " + str(c.instance_id) + " -1")
+            # ATTACK to opponent card
+            for c_left in self.l_cards_on_left_lane_opponent:
+                self.l_actions.append("ATTACK " + str(c.instance_id) + " " + str(c_left.instance_id))
+            # ATTACK to opponent
+            self.l_actions.append("ATTACK " + str(c.instance_id) + " -1")
 
         # for all cards on player right side of the board
         for c in self.l_cards_on_right_lane_player:
-            if c.cost <= self.player1.mana:
-                # ATTACK to opponent card
-                for c_left in self.l_cards_on_left_lane_opponent:
-                    self.l_actions.append("ATTACK " + str(c.instance_id) + " " + str(c_left.instance_id))
-                for c_right in self.l_cards_on_right_lane_opponent:
-                    self.l_actions.append("ATTACK " + str(c.instance_id) + " " + str(c_right.instance_id))
-                # ATTACK to opponent
-                self.l_actions.append("ATTACK " + str(c.instance_id) + " -1")
-
-    # ---------------------------------------
-    # Classify each card in the corresponding list (only if cost <= player mana)
-    # Can attack cards on the players lane (already summoned)
-    # Can be summoned criatures on the hand
-    # Can be used items on the hand
-    def classify_cards(self):
-        for c in self.l_cards:
-            if c.location == self.LOCATION_IN_HAND:
-                self.l_cards_on_player_hand.append(c)
-            elif c.location == self.LOCATION_PLAYER_SIDE and c.lane == self.LANE_LEFT:
-                self.l_cards_on_left_lane_player.append(c)
-            elif c.location == self.LOCATION_OPPONENT_SIDE and c.lane == self.LANE_LEFT:
-                self.l_cards_on_left_lane_opponent.append(c)
-            elif c.location == self.LOCATION_PLAYER_SIDE and c.lane == self.LANE_RIGHT:
-                self.l_cards_on_right_lane_player.append(c)
-            elif c.location == self.LOCATION_OPPONENT_SIDE and c.lane == self.LANE_RIGHT:
-                self.l_cards_on_right_lane_opponent.append(c)
-
-    # ---------------------------------------
-    # return true is the game is in the draft phase
-    def is_draft_phase(self):
-        return self.player1.mana == 0
+            # ATTACK to opponent card
+            for c_right in self.l_cards_on_right_lane_opponent:
+                self.l_actions.append("ATTACK " + str(c.instance_id) + " " + str(c_right.instance_id))
+            # ATTACK to opponent
+            self.l_actions.append("ATTACK " + str(c.instance_id) + " -1")
 
 
 # ------------------------------------------------------------
 # Agent
 # ------------------------------------------------------------
-class Agent():
+class AgentRandom():
     def __init__(self):
         self.state = None
         self.LOCATION_IN_HAND = 0
@@ -171,6 +179,10 @@ class Agent():
         self.TYPE_GREEN = 1
         self.TYPE_RED = 2
         self.TYPE_BLUE = 3
+        self.pick = -1
+
+    def set_pick(self, n):
+        self.pick = n
 
     # ------------------------------------------------------------
     # read the input and fill corresponfing classes
@@ -189,9 +201,10 @@ class Agent():
         l_cards = []
         for i in range(card_count):
             card_number, instance_id, location, card_type, cost, attack, defense, abilities, my_health_change, opponent_health_change, card_draw, lane = input().split()
-            one_card = Card(int(card_number), int(instance_id), int(location), int(card_type), int(cost), int(attack),
-                            int(defense), abilities, (my_health_change), int(opponent_health_change), int(card_draw),
-                            int(lane))
+            one_card = Card(int(card_number), int(instance_id), int(location), int(card_type), int(cost),
+                                 int(attack),
+                                 int(defense), abilities, (my_health_change), int(opponent_health_change),
+                                 int(card_draw), int(lane))
             l_cards.append(one_card)
 
         player1 = Player(player_health1, player_mana1, player_deck1, player_rune1, player_draw1)
@@ -208,10 +221,14 @@ class Agent():
             self.ia_battle()
 
     # ----------------------------------------------
-    # This Agent selects always the first card (0)
+    # This Agent selects always the second card (1)
     # ----------------------------------------------
     def ia_draft(self):
-        print("PICK 0")
+        if self.pick == -1:
+            n = random.randint(0, 2)
+            print("PICK " + str(n))
+        else:
+            print("PICK " + str(self.pick))
 
     # ----------------------------------------------
     # Randomly select the action
@@ -224,12 +241,13 @@ class Agent():
             print(self.state.l_actions[coin])
 
 
-# -------------------------------------------------------
-# Main program.
-# At each turn, read input and perform an action
-# -------------------------------------------------------
+# ----------------------------------------------
+# ----------------------------------------------
+# ----------------------------------------------
+# Always pick the second card
 if __name__ == '__main__':
-    agent = Agent()
+    agent = AgentRandom()
+    agent.set_pick(1)
     while True:
         agent.read_input()
         agent.act()
