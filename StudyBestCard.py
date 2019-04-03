@@ -53,11 +53,15 @@ if __name__ == '__main__':
     for i in range(160):
         if cards_times[i] != 0:
             cards_points[i] = (cards_points[i] / cards_times[i])*100
-    print(cards_times)
+
+    print(cards_points)
+    print(np.min(cards_points))
+    print(np.max(cards_points))
+
+    cards_points = (cards_points - np.min(cards_points)) / (np.max(cards_points)-np.min(cards_points))
     print(cards_points)
 
-    print (np.max(cards_points))
-    print (np.argmax(cards_points))
-
-    print (np.min(cards_points))
-    print (np.argmin(cards_points))
+    cadena = ""
+    for i in range(160):
+        cadena += str(round(cards_points[i], 3)) + ", "
+    print (cadena)
