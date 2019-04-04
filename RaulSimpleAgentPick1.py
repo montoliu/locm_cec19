@@ -10,8 +10,8 @@ class Player:
         self.hp = hp
         self.mana = mana
         self.cards_remaining = cards_remaining  # the number of cards in the player's deck
-        self.rune = rune  # the next remaining rune of a player
-        self.draw = draw  # the additional number of drawn cards
+        self.rune = rune                        # the next remaining rune of a player
+        self.draw = draw                        # the additional number of drawn cards
 
 
 # ------------------------------------------------------------
@@ -75,11 +75,11 @@ class State:
         self.TYPE_BLUE = 3
 
         self.l_actions = []
-        self.l_cards_on_player_hand = []  # list of cards on player hand
-        self.l_cards_on_left_lane_player = []  # list of cards on the left side of the player board
+        self.l_cards_on_player_hand = []         # list of cards on player hand
+        self.l_cards_on_left_lane_player = []    # list of cards on the left side of the player board
         self.l_cards_on_left_lane_opponent = []  # list of cards on the left side of the opponent board
-        self.l_cards_on_right_lane_player = []  # list of cards on the right side of the player board
-        self.l_cards_on_right_lane_opponent = []  # list of cards on the right side of the opponent board
+        self.l_cards_on_right_lane_player = []   # list of cards on the right side of the player board
+        self.l_cards_on_right_lane_opponent = [] # list of cards on the right side of the opponent board
 
         if not self.is_draft_phase():
             self.classify_cards()
@@ -118,7 +118,7 @@ class State:
         return self.player1.mana == 0
 
     # ---------------------------------------
-    # TODO hay que cambiar muchas cosas
+    #TODO hay que cambiar muchas cosas
     def get_all_valid_action(self):
         # for all cards on player hands
         for c in self.l_cards_on_player_hand:
@@ -201,10 +201,8 @@ class AgentRandom():
         l_cards = []
         for i in range(card_count):
             card_number, instance_id, location, card_type, cost, attack, defense, abilities, my_health_change, opponent_health_change, card_draw, lane = input().split()
-            one_card = Card(int(card_number), int(instance_id), int(location), int(card_type), int(cost),
-                                 int(attack),
-                                 int(defense), abilities, (my_health_change), int(opponent_health_change),
-                                 int(card_draw), int(lane))
+            one_card = Card(int(card_number), int(instance_id), int(location), int(card_type), int(cost), int(attack),
+                        int(defense), abilities, (my_health_change), int(opponent_health_change), int(card_draw), int(lane))
             l_cards.append(one_card)
 
         player1 = Player(player_health1, player_mana1, player_deck1, player_rune1, player_draw1)
@@ -225,17 +223,17 @@ class AgentRandom():
     # ----------------------------------------------
     def ia_draft(self):
         if self.pick == -1:
-            n = random.randint(0, 2)
-            print("PICK " + str(n))
+            n = random.randint(0,2)
+            print("PICK "+ str(n))
         else:
-            print("PICK " + str(self.pick))
+            print("PICK "+ str(self.pick))
 
     # ----------------------------------------------
     # Randomly select the action
     # ----------------------------------------------
     def ia_battle(self):
         if len(self.state.l_actions) == 0:
-            print("PASS")
+            print ("PASS")
         else:
             coin = random.randint(0, len(self.state.l_actions) - 1)
             print(self.state.l_actions[coin])
@@ -244,7 +242,7 @@ class AgentRandom():
 # ----------------------------------------------
 # ----------------------------------------------
 # ----------------------------------------------
-# Always pick the second card
+# Always pick the first card
 if __name__ == '__main__':
     agent = AgentRandom()
     agent.set_pick(1)

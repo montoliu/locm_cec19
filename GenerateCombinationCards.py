@@ -1,12 +1,12 @@
 # genera muchas combinaciones de posibles cartas para la fase de draft
 # Como resultado escribe un script para su ejecución
-#java -jar ./LoCM.jar -p1 "python3 mainPlayerRandomPick0.py" -p2 "python3 PLayer2.py" -d "predefinedDraftIds=1_2_3_,_3_2_1_,_2_2_2_,160_160_160,_150_151_152,_130_131_132,_7_7_7,_8_8_8,_9_9_9,_10_10_10,_11_11_11,_12_12_12,_13_13_13,_14_14_14,_15_15_15,_16_16_16,_17_17_17,_18_18_18,_19_19_19,_20_20_20,_11_11_11,_12_12_12,_13_13_13,_14_14_14,_15_15_15,_16_16_16,_17_17_17,_18_18_18,_19_19_19,_30_30_30"
+#java -jar ./LoCM.jar -p1 "python3 RaulSimpleAgentPick0.py" -p2 "python3 PLayer2.py" -d "predefinedDraftIds=1_2_3_,_3_2_1_,_2_2_2_,160_160_160,_150_151_152,_130_131_132,_7_7_7,_8_8_8,_9_9_9,_10_10_10,_11_11_11,_12_12_12,_13_13_13,_14_14_14,_15_15_15,_16_16_16,_17_17_17,_18_18_18,_19_19_19,_20_20_20,_11_11_11,_12_12_12,_13_13_13,_14_14_14,_15_15_15,_16_16_16,_17_17_17,_18_18_18,_19_19_19,_30_30_30"
 import random
 
 
 n_times = 10000 # numero de partidas (cada partida una combinación)
-name_agent1 = "mainPlayerRandomPick0.py"
-name_agent2 = "mainPlayerRandomPick1.py"
+name_agent1 = "RaulSimpleAgentPick0.py"
+name_agent2 = "RaulSimpleAgentPick1.py"
 output_filename = "go.sh"
 
 

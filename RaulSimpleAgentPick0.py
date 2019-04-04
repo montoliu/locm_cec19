@@ -224,9 +224,9 @@ class AgentRandom():
     def ia_draft(self):
         if self.pick == -1:
             n = random.randint(0,2)
-            print("PICK "+ str(n))
+            print("PICK " + str(n))
         else:
-            print("PICK "+ str(self.pick))
+            print("PICK " + str(self.pick))
 
     # ----------------------------------------------
     # Randomly select the action
