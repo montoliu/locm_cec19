@@ -32,6 +32,7 @@ class Card:
         self.card_draw = card_draw
         self.lane = lane
 
+    # return True if the card has some of the following abilities, False otherwise
     def has_breakthrough(self):
         return 'B' in self.abilities
 
@@ -49,6 +50,23 @@ class Card:
 
     def has_ward(self):
         return 'W' in self.abilities
+
+    # return the number of abilities of the card
+    def get_points_abilities(self):
+        n = 0
+        if self.has_breakthrough():
+            n += 1
+        if self.has_charge():
+            n += 1
+        if self.has_drain():
+            n += 1
+        if self.has_guard():
+            n += 1
+        if self.has_lethal():
+            n += 1
+        if self.has_ward():
+            n += 1
+        return n
 
 
 # ------------------------------------------------------------
@@ -74,6 +92,7 @@ class State:
         self.TYPE_RED = 2
         self.TYPE_BLUE = 3
 
+        # The cards will be classified in these list
         self.l_cards_on_player_hand = []         # list of cards on player hand
         self.l_cards_on_left_lane_player = []    # list of cards on the left side of the player board
         self.l_cards_on_left_lane_opponent = []  # list of cards on the left side of the opponent board
@@ -82,7 +101,6 @@ class State:
 
         if not self.is_draft_phase():
             self.classify_cards()
-            #self.get_all_valid_action()
 
             # DEBUG
             # print("l_cards_on_player_hand: " + str(len(self.l_cards_on_player_hand)), file=sys.stderr)
@@ -92,10 +110,7 @@ class State:
             # print("l_cards_on_right_lane_opponent: " + str(len(self.l_cards_on_right_lane_opponent)), file=sys.stderr)
 
     # ---------------------------------------
-    # Classify each card in the corresponding list (only if cost <= player mana)
-    # Can attack cards on the players lane (already summoned)
-    # Can be summoned criatures on the hand
-    # Can be used items on the hand
+    # Classify a card in the corresponding list
     def classify_cards(self):
         for c in self.l_cards:
             if c.location == self.LOCATION_IN_HAND:
@@ -110,7 +125,7 @@ class State:
                 self.l_cards_on_right_lane_opponent.append(c)
 
     # ---------------------------------------
-    # return true is the game is in the draft phase
+    # Return true is the game is in the draft phase
     def is_draft_phase(self):
         return self.player1.mana == 0
 
@@ -120,14 +135,15 @@ class State:
 # ------------------------------------------------------------
 class Draft:
     def __init__(self):
-        self.picked_card_type = [0, 0, 0, 0, 0, 0, 0, 0]
-        self.prefer_card_type = [5, 5, 5, 5, 4, 2, 2, 2]
+        self.picked_card_type = [0, 0, 0, 0, 0, 0, 0, 0]  # number of actual picked card of each type
+        self.prefer_card_type = [5, 5, 5, 5, 4, 2, 2, 2]  # desired number of cards of each type
         self.TYPE_CREATURE = 0
         self.TYPE_GREEN = 1
         self.TYPE_RED = 2
         self.TYPE_BLUE = 3
 
     # ------------------------------------------------------------
+    # Select the best card and fill the corresponging value on picked_card_type
     def pick_card(self, cards):
         best_card = self.select_bestcard(cards)
         if cards[best_card].card_type == self.TYPE_CREATURE and cards[best_card].cost < 3:
@@ -150,23 +166,27 @@ class Draft:
         return best_card
 
     # ------------------------------------------------------------
-    def select_bestcard(self, cards):
+    # Algorithm to select the best card.
+    # First select the card with more abilities.
+    # If all cards have the same number of abilities: random
+    # It is random, but the types (on picked_card_type) with more gaps are more probables
+    def select_bestcard(self, l_cards):
         l_percent = []
-        for c in cards:
-            if c.card_type == self.TYPE_CREATURE:
-                if c.cost < 3:
+        for card in l_cards:
+            if card.card_type == self.TYPE_CREATURE:
+                if card.cost < 3:
                     p = self.prefer_card_type[0] - self.picked_card_type[0]
-                elif c.cost < 5:
+                elif card.cost < 5:
                     p = self.prefer_card_type[1] - self.picked_card_type[1]
-                elif c.cost < 7:
+                elif card.cost < 7:
                     p = self.prefer_card_type[2] - self.picked_card_type[2]
-                elif c.cost < 9:
+                elif card.cost < 9:
                     p = self.prefer_card_type[3] - self.picked_card_type[3]
                 else:
                     p = self.prefer_card_type[4] - self.picked_card_type[4]
-            elif c.card_type == self.TYPE_GREEN:
+            elif card.card_type == self.TYPE_GREEN:
                 p = self.prefer_card_type[5] - self.picked_card_type[5]
-            elif c.card_type == self.TYPE_RED:
+            elif card.card_type == self.TYPE_RED:
                 p = self.prefer_card_type[6] - self.picked_card_type[6]
             else:
                 p = self.prefer_card_type[7] - self.picked_card_type[7]
@@ -409,12 +429,16 @@ class Agent:
     # ----------------------------------------------
     # ----------------------------------------------
     def ia_select_player_card_to_use_on(self, l_own_cards):
+        if len(l_own_cards) == 0:
+            return -1
         coin = random.randint(0,len(l_own_cards)-1)
         return l_own_cards[coin].instance_id
 
     # ----------------------------------------------
     # ----------------------------------------------
     def ia_select_opponent_card_to_use_on(self, l_opponent_cards):
+        if len(l_opponent_cards) == 0:
+            return -1
         coin = random.randint(0, len(l_opponent_cards) - 1)
         return l_opponent_cards[coin].instance_id
 
