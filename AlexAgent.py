@@ -32,24 +32,19 @@ class Card:
         self.opponent_health_change = opponent_health_change
         self.card_draw = card_draw
         self.lane = lane
-
-    def has_breakthrough(self):
-        return 'B' in self.abilities
-
-    def has_charge(self):
-        return 'C' in self.abilities
-
-    def has_drain(self):
-        return 'D' in self.abilities
-
-    def has_guard(self):
-        return 'G' in self.abilities
-
-    def has_lethal(self):
-        return 'L' in self.abilities
-
-    def has_ward(self):
-        return 'W' in self.abilities
+        self.breakthrough = False
+        self.charge = False
+        self.drain = False
+        self.guard = False
+        self.lethal = False
+        self.ward = False
+        for c in abilities:
+            if c == 'B': self.breakthrough = True
+            elif c == 'C': self.charge = True
+            elif c == 'D':self.drain = True
+            elif c == 'G': self.guard = True
+            elif c == 'L': self.lethal = True
+            elif c == 'W': self.lethal = True
 
 
 # ------------------------------------------------------------
@@ -82,9 +77,15 @@ class State:
         self.l_cards_on_right_lane_player = []   # list of cards on the right side of the player board
         self.l_cards_on_right_lane_opponent = [] # list of cards on the right side of the opponent board
 
+        self.l_turn = []
+        self.l_cards_can_attack = []
+        self.l_cards_on_player_board = []
+        self.l_cards_on_opponent_board = []
+        self.l_left_opponent_cards_guard = []
+        self.l_right_opponent_cards_guard = []
+
         if not self.is_draft_phase():
             self.classify_cards()
-            self.get_all_valid_action()
 
             # DEBUG
             print("l_cards_on_player_hand: " + str(len(self.l_cards_on_player_hand)), file=sys.stderr)
@@ -106,12 +107,22 @@ class State:
                 self.l_cards_on_player_hand.append(c)
             elif c.location == self.LOCATION_PLAYER_SIDE and c.lane == self.LANE_LEFT:
                 self.l_cards_on_left_lane_player.append(c)
+                self.l_cards_can_attack.append(c)
+                self.l_cards_on_player_board.append(c)
             elif c.location == self.LOCATION_OPPONENT_SIDE and c.lane == self.LANE_LEFT:
                 self.l_cards_on_left_lane_opponent.append(c)
+                self.l_cards_on_opponent_board.append(c)
+                if c.guard:
+                    self.l_left_opponent_cards_guard.append(c)
             elif c.location == self.LOCATION_PLAYER_SIDE and c.lane == self.LANE_RIGHT:
                 self.l_cards_on_right_lane_player.append(c)
+                self.l_cards_can_attack.append(c)
+                self.l_cards_on_player_board.append(c)
             elif c.location == self.LOCATION_OPPONENT_SIDE and c.lane == self.LANE_RIGHT:
                 self.l_cards_on_right_lane_opponent.append(c)
+                self.l_cards_on_opponent_board.append(c)
+                if c.guard:
+                    self.l_right_opponent_cards_guard.append(c)
 
     # ---------------------------------------
     # return true is the game is in the draft phase
@@ -120,47 +131,171 @@ class State:
 
     # ---------------------------------------
     #TODO hay que cambiar muchas cosas
-    def get_all_valid_action(self):
+    def get_turn(self):
         # for all cards on player hands
+        l_turn = []
+        self.l_cards_on_player_hand = self.summon()
+        self.attack()
+        if len(self.l_cards_on_player_hand) > 0:
+             self.summon()
+             self.attack()
+
+    def summon(self):
+        self.l_cards_on_player_hand.sort(key=lambda x: x.cost, reverse=True)
+        l_cards_can_summon_after = []
         for c in self.l_cards_on_player_hand:
-            if c.cost <= self.player1.mana:
-                if c.card_type == self.TYPE_CREATURE:
-                    # SUMMON
-                    if len(self.l_cards_on_left_lane_player) < 3:
-                        self.l_actions.append("SUMMON " + str(c.instance_id) + " " + str(self.LANE_LEFT))
-                    if len(self.l_cards_on_right_lane_player) < 3:
-                        self.l_actions.append("SUMMON " + str(c.instance_id) + " " + str(self.LANE_RIGHT))
-                if c.card_type == self.TYPE_BLUE:
-                    # USE on player or opponent
-                    self.l_actions.append("USE " + str(c.instance_id) + " -1")
-                elif c.card_type == self.TYPE_GREEN:
-                    # USE on player cards
-                    for c_left in self.l_cards_on_left_lane_player:
-                        self.l_actions.append("USE " + str(c.instance_id) + " " + str(c_left.instance_id))
-                    for c_right in self.l_cards_on_right_lane_player:
-                        self.l_actions.append("USE " + str(c.instance_id) + " " + str(c_right.instance_id))
-                elif c.card_type == self.TYPE_RED:
-                    # USE on opponent cards:
-                    for c_left in self.l_cards_on_left_lane_opponent:
-                        self.l_actions.append("USE " + str(c.instance_id) + " " + str(c_left.instance_id))
-                    for c_right in self.l_cards_on_right_lane_opponent:
-                        self.l_actions.append("USE " + str(c.instance_id) + " " + str(c_right.instance_id))
+            if c.cost > self.player1.mana:
+                continue
+            if c.card_type == 0 and len(self.l_cards_on_left_lane_player) >= 3 and len(self.l_cards_on_left_lane_player) >= 3:
+                l_cards_can_summon_after.append(c)
+                continue
+            if c.card_type == 1 and len(self.l_cards_on_left_lane_player) == 0 and len(self.l_cards_on_right_lane_player) == 0:
+                l_cards_can_summon_after.append(c)
+                continue
+            if c.card_type == 2 and len(self.l_cards_on_left_lane_opponent) == 0 and len(self.l_cards_on_right_lane_opponent) == 0:
+                continue
+            if c.card_type == 0:
+                if len(self.l_cards_on_left_lane_player) == 3 and len(self.l_cards_on_right_lane_player) == 3:
+                    l_cards_can_summon_after.append(c)
+                elif len(self.l_cards_on_left_lane_player) == 3:
+                    self.l_turn.append("SUMMON " + str(c.instance_id) + " "+ str(self.LANE_RIGHT) + ";")
+                    if c.charge:
+                        self.l_cards_can_attack.append(c)
+                elif len(self.l_cards_on_right_lane_player) == 3:
+                    self.l_turn.append("SUMMON " + str(c.instance_id) + " "+ str(self.LANE_LEFT) + ";")
+                    if c.charge:
+                        self.l_cards_can_attack.append(c)
+                else:
+                    left_lane_per = 3 - len(self.l_cards_on_left_lane_player)
+                    right_lane_per = 3 - len(self.l_cards_on_right_lane_player)
+                    r = random.randint(0, left_lane_per + right_lane_per -1)
+                    if r < left_lane_per:
+                        self.l_turn.append("SUMMON " + str(c.instance_id) + " "+ str(self.LANE_LEFT) + ";")
+                    else:
+                        self.l_turn.append("SUMMON " + str(c.instance_id) + " "+ str(self.LANE_RIGHT) + ";")
+                    if c.charge:
+                        self.l_cards_can_attack.append(c)
+            elif c.card_type == 1:
+                r = random.randint(0,  len(self.l_cards_on_player_board) - 1)
+                self.l_turn.append("USE " + str(c.instance_id) + " " + str(self.l_cards_on_player_board[r].instance_id) + ";")
+            elif c.card_type == 2:
+                r = random.randint(0, len(self.l_cards_on_opponent_board)-1)
+                self.l_turn.append("USE " + str(c.instance_id) + " " + str(self.l_cards_on_opponent_board[r].instance_id) + ";")
+                self.l_cards_on_opponent_board[r].defense -= c.defense
+                if self.l_cards_on_opponent_board[r].defense <= 0:
+                    if self.l_cards_on_opponent_board[r].lane == self.LANE_LEFT:
+                        self.l_cards_on_left_lane_opponent.remove(self.l_cards_on_opponent_board[r])
+                        if self.l_cards_on_opponent_board[r] in self.l_left_opponent_cards_guard:
+                            self.l_left_opponent_cards_guard.remove(self.l_cards_on_opponent_board[r])
+                    else:
+                        self.l_cards_on_right_lane_opponent.remove(self.l_cards_on_opponent_board[r])
+                        if self.l_cards_on_opponent_board[r] in self.l_right_opponent_cards_guard:
+                            self.l_right_opponent_cards_guard.remove(self.l_cards_on_right_lane_opponent[r])
+                    self.l_cards_on_opponent_board.remove(self.l_cards_on_opponent_board[r])
+            elif c.card_type == 3:
+                if c.defense < 0:
+                    r = random.randint(-1, len(self.l_cards_on_opponent_board) - 1)
+                    if r < 0:
+                        self.l_turn.append("USE " + str(c.instance_id) + " -1;")
+                    else:
+                        self.l_turn.append("USE " + str(c.instance_id) + " " + str(self.l_cards_on_opponent_board[r].instance_id) + ";")
+                        self.l_cards_on_opponent_board[r].defense -= c.defense
+                        if self.l_cards_on_opponent_board[r].defense <= 0:
+                            if self.l_cards_on_opponent_board[r].lane == self.LANE_LEFT:
+                                self.l_cards_on_left_lane_opponent.remove(self.l_cards_on_opponent_board[r])
+                                if self.l_cards_on_opponent_board[r] in self.l_left_opponent_cards_guard:
+                                    self.l_left_opponent_cards_guard.remove(self.l_cards_on_opponent_board[r])
+                            else:
+                                self.l_cards_on_right_lane_opponent.remove(self.l_cards_on_opponent_board[r])
+                                if self.l_cards_on_opponent_board[r] in self.l_right_opponent_cards_guard:
+                                    self.l_right_opponent_cards_guard.remove(self.l_cards_on_right_lane_opponent[r])
+                            self.l_cards_on_opponent_board.remove(self.l_cards_on_opponent_board[r])
 
-        # for all cards on player left side of the board
-        for c in self.l_cards_on_left_lane_player:
-            # ATTACK to opponent card
-            for c_left in self.l_cards_on_left_lane_opponent:
-                self.l_actions.append("ATTACK " + str(c.instance_id) + " " + str(c_left.instance_id))
-            # ATTACK to opponent
-            self.l_actions.append("ATTACK " + str(c.instance_id) + " -1")
+                else:
+                    self.l_turn.append("USE " + str(c.instance_id) + " -1;")
+            self.player1.mana -= c.cost
+            self.l_cards_on_player_hand.remove(c)
+        return l_cards_can_summon_after
 
-        # for all cards on player right side of the board
-        for c in self.l_cards_on_right_lane_player:
-            # ATTACK to opponent card
-            for c_right in self.l_cards_on_right_lane_opponent:
-                self.l_actions.append("ATTACK " + str(c.instance_id) + " " + str(c_right.instance_id))
-            # ATTACK to opponent
-            self.l_actions.append("ATTACK " + str(c.instance_id) + " -1")
+    def attack(self):
+
+        for c in self.l_cards_can_attack:
+            if c.lane == self.LANE_LEFT:
+                if len(self.l_left_opponent_cards_guard) > 0:
+                    if not c.ward or not c.guard:
+                        r = random.randint(0, len(self.l_left_opponent_cards_guard)-1)
+                        self.l_turn.append("ATTACK " + str(c.instance_id) + " " + str(self.l_left_opponent_cards_guard[r].instance_id) + ";")
+                        if self.l_left_opponent_cards_guard[r].ward:
+                            self.l_left_opponent_cards_guard[r].ward = False
+                        elif c.lethal:
+                            self.l_left_opponent_cards_guard[r].defense = 0
+                        else:
+                            self.l_left_opponent_cards_guard[r].defense -= c.attack
+                        c.defense -= self.l_left_opponent_cards_guard[r].attack
+                        if self.l_left_opponent_cards_guard[r].defense <= 0:
+                            self.l_cards_on_left_lane_opponent.remove(self.l_left_opponent_cards_guard[r])
+                            self.l_cards_on_opponent_board.remove(self.l_left_opponent_cards_guard[r])
+                            self.l_left_opponent_cards_guard.remove(self.l_left_opponent_cards_guard[r])
+                        if c.defense <= 0:
+                            self.l_cards_on_left_lane_player.remove(c)
+                        self.l_cards_can_attack.remove(c)
+                else:
+                    if not c.ward or not c.guard:
+                        r = random.randint(-1, len(self.l_cards_on_left_lane_opponent)-1)
+                        if r < 0:
+                            self.l_turn.append("ATTACK " + str(c.instance_id) + " -1;")
+                        else:
+                            self.l_turn.append("ATTACK " + str(c.instance_id) + " " + str(self.l_cards_on_left_lane_opponent[r].instance_id) + ";")
+                            if self.l_cards_on_left_lane_opponent[r].ward:
+                                self.l_cards_on_left_lane_opponent[r].ward = False
+                            elif c.lethal:
+                                self.l_cards_on_left_lane_opponent[r].defense = 0
+                            else:
+                                self.l_cards_on_left_lane_opponent[r].defense -= c.attack
+                            if self.l_cards_on_left_lane_opponent[r].defense <= 0:
+                                self.l_cards_on_opponent_board.remove(self.l_cards_on_left_lane_opponent[r])
+                                self.l_cards_on_left_lane_opponent.remove(self.l_cards_on_left_lane_opponent[r])
+                    else:
+                        self.l_turn.append("ATTACK " + str(c.instance_id) + " -1;")
+                        self.l_cards_can_attack.remove(c)
+            elif c.lane == self.LANE_RIGHT:
+                if len(self.l_right_opponent_cards_guard) > 0:
+                    if not c.ward or not c.guard:
+                        r = random.randint(0, len(self.l_right_opponent_cards_guard)-1)
+                        self.l_turn.append("ATTACK " + str(c.instance_id) + " " + str(self.l_right_opponent_cards_guard[r].instance_id) + ";")
+                        if self.l_right_opponent_cards_guard[r].ward:
+                            self.l_right_opponent_cards_guard[r].ward = False
+                        elif c.lethal:
+                            self.l_right_opponent_cards_guard[r].defense = 0
+                        else:
+                            self.l_right_opponent_cards_guard[r].defense -= c.attack
+                        c.defense -= self.l_right_opponent_cards_guard[r].attack
+                        if self.l_right_opponent_cards_guard[r].defense <= 0:
+                            self.l_cards_on_right_lane_opponent.remove(self.l_right_opponent_cards_guard[r])
+                            self.l_right_opponent_cards_guard.remove(self.l_right_opponent_cards_guard[r])
+                        if c.defense <= 0:
+                            self.l_cards_on_right_lane_player.remove(c)
+                        self.l_cards_can_attack.remove(c)
+                else:
+                    if not c.ward or not c.guard:
+                        r = random.randint(-1, len(self.l_cards_on_right_lane_opponent) - 1)
+                        if r < 0:
+                            self.l_turn.append("ATTACK " + str(c.instance_id) + " -1;")
+                        else:
+                            self.l_turn.append("ATTACK " + str(c.instance_id) + " " + str(self.l_cards_on_right_lane_opponent[r].instance_id) + ";")
+                            if self.l_cards_on_right_lane_opponent[r].ward:
+                                self.l_cards_on_right_lane_opponent[r].ward = False
+                            elif c.lethal:
+                                self.l_cards_on_right_lane_opponent[r].defense = 0
+                            else:
+                                self.l_cards_on_right_lane_opponent[r].defense -= c.attack
+                            if self.l_cards_on_right_lane_opponent[r].defense <= 0:
+                                self.l_cards_on_opponent_board.remove(self.l_cards_on_right_lane_opponent[r])
+                                self.l_cards_on_right_lane_opponent.remove(self.l_cards_on_right_lane_opponent[r])
+                    else:
+                        self.l_turn.append("ATTACK " + str(c.instance_id) + " -1;")
+                        self.l_cards_can_attack.remove(c)
+
 
 
 # ------------------------------------------------------------
@@ -182,6 +317,8 @@ class AgentRandom():
         self.TYPE_RED = 2
         self.TYPE_BLUE = 3
         self.pick = -1
+
+        self.turn = []
 
     def set_pick(self, n):
         self.pick = n
@@ -205,6 +342,7 @@ class AgentRandom():
             card_number, instance_id, location, card_type, cost, attack, defense, abilities, my_health_change, opponent_health_change, card_draw, lane = input().split()
             one_card = Card(int(card_number), int(instance_id), int(location), int(card_type), int(cost), int(attack),
                         int(defense), abilities, (my_health_change), int(opponent_health_change), int(card_draw), int(lane))
+
             l_cards.append(one_card)
 
         player1 = Player(player_health1, player_mana1, player_deck1, player_rune1, player_draw1)
@@ -212,7 +350,7 @@ class AgentRandom():
         self.state = State(player1, player2, opponent_hand, l_opponent_actions, l_cards)
 
     # ----------------------------------------------
-    # Select best action to do depending on the pahse
+    # Select best action to do depending on the phase
     # ----------------------------------------------
     def act(self):
         if self.state.is_draft_phase():
@@ -220,6 +358,7 @@ class AgentRandom():
             print("PICK " + str(best_card))
 
         else:
+            self.turn = self.state.get_turn()
             self.ia_battle()
 
     # ----------------------------------------------
@@ -236,12 +375,15 @@ class AgentRandom():
     # Randomly select the action
     # ----------------------------------------------
     def ia_battle(self):
-        if len(self.state.l_actions) == 0:
+        if len(self.state.l_turn) == 0:
             print("PASS")
         else:
             #TODO hay que construir la cadena con todas las acciones que se hayan elegido
-            coin = random.randint(0, len(self.state.l_actions) - 1)
-            print(self.state.l_actions[coin])
+            turn_string = ""
+            for action in self.state.l_turn:
+                turn_string += action
+            #coin = random.randint(0, len(self.state.l_actions) - 1)
+            print(turn_string)
 
 
 # ------------------------------------------------------------
@@ -308,6 +450,8 @@ class Draft:
                 p = (self.prefer_card_type[7] - self.picked_card_type[7]) * self.l_cards_values[c.card_id - 1]
             l_percent.append(p)
         result = random.uniform(0, np.sum(l_percent))
+        if result == 0:
+            return random.randint(0, 2)
         if result <= l_percent[0]:
             n = 0
         elif result <= (l_percent[0]+l_percent[1]):
