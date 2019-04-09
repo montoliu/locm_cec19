@@ -95,7 +95,7 @@ class State:
             print("l_cards_on_right_lane_opponent: " + str(len(self.l_cards_on_right_lane_opponent)), file=sys.stderr)
             print("l_actions: " + str(len(self.l_actions)), file=sys.stderr)
             print(self.l_actions, file=sys.stderr)
-            print("l_cards_on_can_atack: " + str(len(self.l_cards_can_attack)), file=sys.stderr)
+            
 
     # ---------------------------------------
     # Classify each card in the corresponding list (only if cost <= player mana)
@@ -225,9 +225,12 @@ class State:
             for c in self.l_cards_can_attack:
                 self.l_turn.append("ATTACK " + str(c.instance_id) + " -1;")
         else:
+            print("l_cards_on_can_atack: " + str(len(self.l_cards_can_attack)), file=sys.stderr)
             for c in self.l_cards_can_attack:
+                print("pre-attacking: " + str(c.instance_id), file=sys.stderr)
                 if c.lane == self.LANE_LEFT:
                     if len(self.l_left_opponent_cards_guard) > 0:
+                        print("attacking card: " + str(c.instance_id), file=sys.stderr)
                         if not c.ward or not c.guard:
                             r = random.randint(0, len(self.l_left_opponent_cards_guard)-1)
                             if(self.other_can_kill(c, self.l_left_opponent_cards_guard[r])):
@@ -246,9 +249,10 @@ class State:
                                 self.l_left_opponent_cards_guard.remove(self.l_left_opponent_cards_guard[r])
                             if c.defense <= 0:
                                 self.l_cards_on_left_lane_player.remove(c)
-                            self.l_cards_can_attack.remove(c)
+                            #self.l_cards_can_attack.remove(c)
                     else:
                         if not c.ward or not c.guard:
+                            print("attacking card: " + str(c.instance_id), file=sys.stderr)
                             r = random.randint(-1, len(self.l_cards_on_left_lane_opponent)-1)
                             if (r < 0) or (self.other_can_kill(c, self.l_cards_on_left_lane_opponent[r])):
                                 self.l_turn.append("ATTACK " + str(c.instance_id) + " -1;")
@@ -265,10 +269,11 @@ class State:
                                     self.l_cards_on_left_lane_opponent.remove(self.l_cards_on_left_lane_opponent[r])
                         else:
                             self.l_turn.append("ATTACK " + str(c.instance_id) + " -1;")
-                            self.l_cards_can_attack.remove(c)
+                            #self.l_cards_can_attack.remove(c)
                 elif c.lane == self.LANE_RIGHT:
                     if len(self.l_right_opponent_cards_guard) > 0:
                         if not c.ward or not c.guard:
+                            print("attacking card: " + str(c.instance_id), file=sys.stderr)
                             r = random.randint(0, len(self.l_right_opponent_cards_guard)-1)
                             if(self.other_can_kill(c, self.l_right_opponent_cards_guard[r])):
                                 continue
@@ -285,9 +290,10 @@ class State:
                                 self.l_right_opponent_cards_guard.remove(self.l_right_opponent_cards_guard[r])
                             if c.defense <= 0:
                                 self.l_cards_on_right_lane_player.remove(c)
-                            self.l_cards_can_attack.remove(c)
+                            #self.l_cards_can_attack.remove(c)
                     else:
                         if not c.ward or not c.guard:
+                            print("attacking card: " + str(c.instance_id), file=sys.stderr)
                             r = random.randint(-1, len(self.l_cards_on_right_lane_opponent) - 1)
                             if r < 0 or (self.other_can_kill(c, self.l_cards_on_right_lane_opponent[r])):
                                 self.l_turn.append("ATTACK " + str(c.instance_id) + " -1;")
@@ -304,7 +310,7 @@ class State:
                                     self.l_cards_on_right_lane_opponent.remove(self.l_cards_on_right_lane_opponent[r])
                         else:
                             self.l_turn.append("ATTACK " + str(c.instance_id) + " -1;")
-                            self.l_cards_can_attack.remove(c)
+                            #self.l_cards_can_attack.remove(c)
 
     def other_can_kill(self, my_card, enemy_card):
         if my_card.attack >= enemy_card.defense:
@@ -427,8 +433,8 @@ class AgentRandom():
 class Draft:
     def __init__(self):
         self.l_all_cards_picked = []
-        self.picked_card_type = [0, 0, 0, 0, 0, 0, 0, 0]
-        self.prefer_card_type = [7, 7, 5, 5, 2, 1, 1, 1]
+        self.picked_card_type = [0, 0, 0, 0, 0, 0, 0]
+        self.prefer_card_type = [7, 8, 7, 5, 1, 1, 1]
         self.l_cards_values = [0.256, 0.174, 0.18, 0.213, 0.202, 0.212, 0.304, 0.161, 0.24, 0.182, 0.227, 0.174, 0.471, 0.261, 0.341, 0.244, 0.267, 0.331, 0.383, 0.296, 0.367, 0.421, 0.479, 0.173, 0.154, 0.359, 0.293, 0.177, 0.128, 0.293, 0.23, 0.202, 0.258, 0.228, 0.266, 0.233, 0.363, 0.206, 0.215, 0.226, 0.312, 0.316, 0.43, 0.381, 0.35, 0.51, 0.205, 0.247, 0.453, 0.341, 0.408, 0.267, 0.276, 0.286, 0.162, 0.217, 0.134, 0.457, 0.567, 0.358, 0.502, 0.974, 0.269, 0.308, 0.256, 0.438, 0.516, 0.426, 0.354, 0.37, 0.172, 0.383, 0.432, 0.41, 0.528, 0.504, 0.54, 0.58, 0.489, 0.711, 0.413, 0.652, 0.084, 0.241, 0.135, 0.083, 0.302, 0.142, 0.3, 0.29, 0.169, 0.265, 0.239, 0.274, 0.228, 0.291, 0.35, 0.271, 0.33, 0.26, 0.401, 0.368, 0.416, 0.451, 0.447, 0.419, 0.48, 0.323, 0.312, 0.337, 0.537, 0.448, 0.496, 0.584, 0.551, 1.0, 0.145, 0.166, 0.105, 0.131, 0.077, 0.207, 0.102, 0.299, 0.182, 0.135, 0.192, 0.376, 0.217, 0.443, 0.257, 0.352, 0.477, 0.188, 0.429, 0.06, 0.101, 0.068, 0.199, 0.07, 0.048, 0.161, 0.013, 0.169, 0.072, 0.234, 0.0, 0.147, 0.121, 0.062, 0.281, 0.257, 0.33, 0.142, 0.207, 0.393, 0.198, 0.343, 0.492, 0.293]
 
     def pick_card(self, cards):
@@ -439,16 +445,14 @@ class Draft:
             self.picked_card_type[1] += 1
         elif cards[best_card].card_type == 0 and cards[best_card].cost < 7:
             self.picked_card_type[2] += 1
-        elif cards[best_card].card_type == 0 and cards[best_card].cost < 9:
+        elif cards[best_card].card_type == 0 and cards[best_card].cost < 13:
             self.picked_card_type[3] += 1
         elif cards[best_card].card_type == 0:
             self.picked_card_type[4] += 1
         elif cards[best_card].card_type == 1:
             self.picked_card_type[5] += 1
-        elif cards[best_card].card_type == 2:
-            self.picked_card_type[6] += 1
         else:
-            self.picked_card_type[7] += 1
+            self.picked_card_type[6] += 1
 
         print(str(self.l_cards_values[cards[0].card_id - 1]) + " " + str(self.l_cards_values[cards[1].card_id - 1]) + " " + str(self.l_cards_values[cards[2].card_id - 1]) + " " + str(best_card), file=sys.stderr)
         self.l_all_cards_picked.append(cards[best_card])
@@ -473,16 +477,14 @@ class Draft:
                 p = (self.prefer_card_type[1] - self.picked_card_type[1]) * self.l_cards_values[c.card_id - 1]
             elif c.card_type == 0 and c.cost < 7:
                 p = (self.prefer_card_type[2] - self.picked_card_type[2]) * self.l_cards_values[c.card_id - 1]
-            elif c.card_type == 0 and c.cost < 9:
+            elif c.card_type == 0 and c.cost < 13:
                 p = (self.prefer_card_type[3] - self.picked_card_type[3]) * self.l_cards_values[c.card_id - 1]
             elif c.card_type == 0:
                 p = (self.prefer_card_type[4] - self.picked_card_type[4]) * self.l_cards_values[c.card_id - 1]
             elif c.card_type == 1:
                 p = (self.prefer_card_type[5] - self.picked_card_type[5]) * self.l_cards_values[c.card_id - 1]
-            elif c.card_type == 2:
-                p = (self.prefer_card_type[6] - self.picked_card_type[6]) * self.l_cards_values[c.card_id - 1]
             else:
-                p = (self.prefer_card_type[7] - self.picked_card_type[7]) * self.l_cards_values[c.card_id - 1]
+                p = (self.prefer_card_type[6] - self.picked_card_type[6]) * self.l_cards_values[c.card_id - 1]
             l_percent.append(p)
         result = random.uniform(0, np.sum(l_percent))
         if result == 0:
