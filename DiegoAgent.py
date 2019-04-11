@@ -51,7 +51,7 @@ class Card:
             elif c == 'L':
                 self.lethal = True
             elif c == 'W':
-                self.lethal = True
+                self.ward = True
 
 
 # ------------------------------------------------------------
@@ -90,8 +90,10 @@ class State:
         self.l_cards_on_opponent_board = []
         self.l_left_opponent_cards_guard = []
         self.l_right_opponent_cards_guard = []
-        self.l_left_player_cards_guard = []  # edit
-        self.l_right_player_cards_guard = []  # edit
+        self.l_left_player_cards_guard = []
+        self.l_right_player_cards_guard = []
+
+        self.mana_init = 0
 
         if not self.is_draft_phase():
             self.classify_cards()
@@ -146,6 +148,7 @@ class State:
     # TODO hay que cambiar muchas cosas
     def get_turn(self):
         # for all cards on player hands
+        self.mana_init = self.player1.mana
         l_turn = []
         self.l_cards_on_player_hand = self.summon()
         self.attack()
@@ -171,77 +174,83 @@ class State:
                     self.l_cards_on_right_lane_opponent) == 0:
                 continue
             if c.card_type == 0:
-                # if len(self.l_cards_on_left_lane_player) == 3 and len(self.l_cards_on_right_lane_player) == 3:
-                #    l_cards_can_summon_after.append(c) NO HACE FALTA???
                 if len(self.l_cards_on_left_lane_player) == 3:
                     self.l_turn.append("SUMMON " + str(c.instance_id) + " " + str(self.LANE_RIGHT) + ";")
-                    self.l_cards_on_right_lane_player.append(c)  # bugfix
+                    self.l_cards_on_right_lane_player.append(c)
                     if c.charge:
                         self.l_cards_can_attack.append(c)
-                    if c.guard:  # edit
+                    if c.guard:
                         self.l_right_player_cards_guard.append(c)
                 elif len(self.l_cards_on_right_lane_player) == 3:
                     self.l_turn.append("SUMMON " + str(c.instance_id) + " " + str(self.LANE_LEFT) + ";")
-                    self.l_cards_on_left_lane_player.append(c)  # bugfix
+                    self.l_cards_on_left_lane_player.append(c)
                     if c.charge:
                         self.l_cards_can_attack.append(c)
-                    if c.guard:  # edit
+                    if c.guard:
                         self.l_left_player_cards_guard.append(c)
-                elif c.guard and len(self.l_left_player_cards_guard) != len(self.l_right_player_cards_guard):  # edit
+                elif c.guard and len(self.l_left_player_cards_guard) != len(self.l_right_player_cards_guard):
                     if len(self.l_left_player_cards_guard) > len(self.l_right_player_cards_guard):
                         self.l_turn.append("SUMMON " + str(c.instance_id) + " " + str(self.LANE_RIGHT) + ";")
-                        self.l_cards_on_right_lane_player.append(c)  # bugfix
+                        self.l_cards_on_right_lane_player.append(c)
                         if c.charge:
                             self.l_cards_can_attack.append(c)
-                        if c.guard:  # edit
+                        if c.guard:
                             self.l_right_player_cards_guard.append(c)
                     elif len(self.l_left_player_cards_guard) < len(self.l_right_player_cards_guard):
                         self.l_turn.append("SUMMON " + str(c.instance_id) + " " + str(self.LANE_LEFT) + ";")
-                        self.l_cards_on_left_lane_player.append(c)  # bugfix
+                        self.l_cards_on_left_lane_player.append(c)
                         if c.charge:
                             self.l_cards_can_attack.append(c)
-                        if c.guard:  # edit
+                        if c.guard:
                             self.l_left_player_cards_guard.append(c)
                 elif (c.drain or c.charge) and len(self.l_left_player_cards_guard) != len(
-                        self.l_right_player_cards_guard):  # edit
+                        self.l_right_player_cards_guard):
                     if len(self.l_left_opponent_cards_guard) > len(self.l_right_opponent_cards_guard):
                         self.l_turn.append("SUMMON " + str(c.instance_id) + " " + str(self.LANE_RIGHT) + ";")
-                        self.l_cards_on_right_lane_player.append(c)  # bugfix
+                        self.l_cards_on_right_lane_player.append(c)
                         if c.charge:
                             self.l_cards_can_attack.append(c)
-                        if c.guard:  # edit
+                        if c.guard:
                             self.l_right_player_cards_guard.append(c)
                     elif len(self.l_left_opponent_cards_guard) < len(self.l_right_opponent_cards_guard):
                         self.l_turn.append("SUMMON " + str(c.instance_id) + " " + str(self.LANE_LEFT) + ";")
-                        self.l_cards_on_left_lane_player.append(c)  # bugfix
+                        self.l_cards_on_left_lane_player.append(c)
                         if c.charge:
                             self.l_cards_can_attack.append(c)
-                        if c.guard:  # edit
+                        if c.guard:
                             self.l_left_player_cards_guard.append(c)
                 else:
-                    left_lane_per = 9 - len(self.l_cards_on_left_lane_player) - len(
-                        self.l_left_opponent_cards_guard) * 2  # edit
-                    right_lane_per = 9 - len(self.l_cards_on_right_lane_player) - len(
-                        self.l_right_opponent_cards_guard) * 2  # edit
+                    left_lane_per = 6 + len(self.l_cards_on_left_lane_player) - len(
+                        self.l_left_opponent_cards_guard) * 2
+                    right_lane_per = 6 + len(self.l_cards_on_right_lane_player) - len(
+                        self.l_right_opponent_cards_guard) * 2
                     r = random.randint(0, left_lane_per + right_lane_per - 1)
                     if r < left_lane_per:
                         self.l_turn.append("SUMMON " + str(c.instance_id) + " " + str(self.LANE_LEFT) + ";")
-                        self.l_cards_on_left_lane_player.append(c)  # bugfix
-                        if c.guard:  # edit
+                        self.l_cards_on_left_lane_player.append(c)
+                        if c.guard:
                             self.l_left_player_cards_guard.append(c)
                     else:
                         self.l_turn.append("SUMMON " + str(c.instance_id) + " " + str(self.LANE_RIGHT) + ";")
-                        self.l_cards_on_right_lane_player.append(c)  # bugfix
-                        if c.guard:  # edit
+                        self.l_cards_on_right_lane_player.append(c)
+                        if c.guard:
                             self.l_right_player_cards_guard.append(c)
                     if c.charge:
                         self.l_cards_can_attack.append(c)
-            elif c.card_type == 1 and len(self.l_cards_on_player_board) > 0:
-                r = random.randint(0, len(
-                    self.l_cards_on_player_board) - 1)  # ha crasheado aqui una vez aunque no entiendo como coño ha entrado con las lineas vacias
-                self.l_turn.append(
-                    "USE " + str(c.instance_id) + " " + str(self.l_cards_on_player_board[r].instance_id) + ";")
-                # aquí habria que aplicar efectos al jugador, no?
+            elif c.card_type == 1 and self.mana_init > 3:
+                if len(self.l_cards_can_attack) > 0:
+                    o = -1;
+                    a = 0;
+                    for i in range(len(self.l_cards_can_attack)):
+                        if (self.l_cards_can_attack[i].attack > a):
+                            o = self.l_cards_can_attack[i].instance_id
+                            a = self.l_cards_can_attack[i].attack
+                    self.l_turn.append("USE " + str(c.instance_id) + " " + str(o) + ";")
+                else:
+                    l_cards_can_summon_after.append(c)
+                # r = random.randint(0,  len(self.l_cards_on_player_board) - 1)
+                # self.l_turn.append("USE " + str(c.instance_id) + " " + str(self.l_cards_on_player_board[r].instance_id) + ";")
+            # aquí habria que aplicar efectos al jugador, no?
             elif c.card_type == 2:
                 r = random.randint(0, len(self.l_cards_on_opponent_board) - 1)
                 self.l_turn.append(
@@ -285,14 +294,36 @@ class State:
 
     def attack(self):
         self.l_cards_can_attack.sort(key=lambda x: x.attack, reverse=False)
-        while len(self.l_cards_can_attack) > 0:  # bugfix
+        '''for i in range(len(self.l_cards_can_attack)):
+            if (self.l_cards_can_attack[i].drain or self.l_cards_can_attack[i].guard):
+                card=self.l_cards_can_attack.pop(i)
+                self.l_cards_can_attack.insert(0,card) '''
+        while len(self.l_cards_can_attack) > 0:
             c = self.l_cards_can_attack[0]
             print(c.instance_id, file=sys.stderr)
             if c.lane == self.LANE_LEFT:
-                if len(self.l_left_opponent_cards_guard) == 0:  # edit
-                    self.l_turn.append("ATTACK " + str(c.instance_id) + " -1;")
-                    self.l_cards_can_attack.remove(c)
-                elif c.guard:  # edit
+                if len(self.l_left_opponent_cards_guard) == 0:
+                    ''''cont=True
+                    for e in self.l_cards_on_left_lane_opponent:
+                        if (e.drain):
+                            self.l_turn.append("ATTACK " + str(c.instance_id) + " " + str(e.instance_id)+";")
+                            self.l_cards_can_attack.remove(c)
+                            cont=False
+                            break
+                    if (cont):'''
+                    if (c.lethal) and (len(self.l_cards_on_left_lane_opponent) > 0):
+                        a = 0
+                        o = -1
+                        for i in range(len(self.l_cards_on_left_lane_opponent)):
+                            if (self.l_cards_on_left_lane_opponent[i].attack >= a):
+                                a = self.l_cards_on_left_lane_opponent[i].attack
+                                o = self.l_cards_on_left_lane_opponent[i].instance_id
+                        self.l_turn.append("ATTACK " + str(c.instance_id) + " " + str(o) + ";")
+                        self.l_cards_can_attack.remove(c)
+                    else:
+                        self.l_turn.append("ATTACK " + str(c.instance_id) + " -1;")
+                        self.l_cards_can_attack.remove(c)
+                elif c.guard:
                     self.l_cards_can_attack.remove(c)
                 else:
                     r = random.randint(0, len(self.l_left_opponent_cards_guard) - 1)
@@ -311,15 +342,32 @@ class State:
                         self.l_left_opponent_cards_guard.remove(self.l_left_opponent_cards_guard[r])
                     if c.defense <= 0:
                         if c in self.l_cards_on_left_lane_player:
-                            self.l_cards_on_left_lane_player.remove(
-                                c)  # aquí salta un bug pero no lo acabo de encontrar asi que hago un arreglo cutre
+                            self.l_cards_on_left_lane_player.remove(c)
                     self.l_cards_can_attack.remove(c)
 
             else:
-                if len(self.l_right_opponent_cards_guard) == 0:  # edit
+                if len(self.l_right_opponent_cards_guard) == 0:
+                    '''cont=True
+                    for e in self.l_cards_on_right_lane_opponent:
+                        if (e.drain):
+                            self.l_turn.append("ATTACK " + str(c.instance_id) + " " + str(e.instance_id)+";")
+                            self.l_cards_can_attack.remove(c)
+                            cont=False
+                            break
+                    if (cont):
+                        if (c.lethal) and (len(self.l_cards_on_right_lane_opponent)>0):
+                            a=0
+                            o=-1
+                            for i in range(len(self.l_cards_on_right_lane_opponent)):
+                                if (self.l_cards_on_right_lane_opponent[i].attack>=a):
+                                    a=self.l_cards_on_right_lane_opponent[i].attack
+                                    o=self.l_cards_on_right_lane_opponent[i].instance_id  
+                            self.l_turn.append("ATTACK " + str(c.instance_id) + " " + str(o)+";")
+                            self.l_cards_can_attack.remove(c)
+                        else:'''
                     self.l_turn.append("ATTACK " + str(c.instance_id) + " -1;")
                     self.l_cards_can_attack.remove(c)
-                elif c.guard:  # edit
+                elif c.guard:
                     self.l_cards_can_attack.remove(c)
                 else:
                     r = random.randint(0, len(self.l_right_opponent_cards_guard) - 1)
@@ -337,8 +385,7 @@ class State:
                         self.l_right_opponent_cards_guard.remove(self.l_right_opponent_cards_guard[r])
                     if c.defense <= 0:
                         if c in self.l_cards_on_right_lane_player:
-                            self.l_cards_on_right_lane_player.remove(
-                                c)  # aquí salta un bug pero no lo acabo de encontrar asi que hago un arreglo cutre
+                            self.l_cards_on_right_lane_player.remove(c)
                     self.l_cards_can_attack.remove(c)
 
 
@@ -437,37 +484,38 @@ class AgentRandom():
 class Draft:
     def __init__(self):
         self.l_all_cards_picked = []
-        self.picked_card_type = [0, 0, 0, 0, 0, 0]
-        self.prefer_card_type = [6, 9, 6, 5, 4, 0]
+        self.picked_card_type = [0, 0, 0, 0, 0, 0, 0, 0]
+        self.prefer_card_type = [7, 9, 7, 4, 3, 0, 0, 0]
 
     # self.l_cards_values = [0.256, 0.174, 0.18, 0.213, 0.202, 0.212, 0.304, 0.161, 0.24, 0.182, 0.227, 0.174, 0.471, 0.261, 0.341, 0.244, 0.267, 0.331, 0.383, 0.296, 0.367, 0.421, 0.479, 0.173, 0.154, 0.359, 0.293, 0.177, 0.128, 0.293, 0.23, 0.202, 0.258, 0.228, 0.266, 0.233, 0.363, 0.206, 0.215, 0.226, 0.312, 0.316, 0.43, 0.381, 0.35, 0.51, 0.205, 0.247, 0.453, 0.341, 0.408, 0.267, 0.276, 0.286, 0.162, 0.217, 0.134, 0.457, 0.567, 0.358, 0.502, 0.974, 0.269, 0.308, 0.256, 0.438, 0.516, 0.426, 0.354, 0.37, 0.172, 0.383, 0.432, 0.41, 0.528, 0.504, 0.54, 0.58, 0.489, 0.711, 0.413, 0.652, 0.084, 0.241, 0.135, 0.083, 0.302, 0.142, 0.3, 0.29, 0.169, 0.265, 0.239, 0.274, 0.228, 0.291, 0.35, 0.271, 0.33, 0.26, 0.401, 0.368, 0.416, 0.451, 0.447, 0.419, 0.48, 0.323, 0.312, 0.337, 0.537, 0.448, 0.496, 0.584, 0.551, 1.0, 0.145, 0.166, 0.105, 0.131, 0.077, 0.207, 0.102, 0.299, 0.182, 0.135, 0.192, 0.376, 0.217, 0.443, 0.257, 0.352, 0.477, 0.188, 0.429, 0.06, 0.101, 0.068, 0.199, 0.07, 0.048, 0.161, 0.013, 0.169, 0.072, 0.234, 0.0, 0.147, 0.121, 0.062, 0.281, 0.257, 0.33, 0.142, 0.207, 0.393, 0.198, 0.343, 0.492, 0.293]
     # he quitado los estos porque no me convencen
 
     def pick_card(self, cards):
         best_card = self.select_bestcard(cards)
-        if cards[best_card].card_type == 0 and cards[best_card].cost < 3:
+        if cards[best_card].card_type == 0 and cards[best_card].cost < 2:
             self.picked_card_type[0] += 1
-        elif cards[best_card].card_type == 0 and cards[best_card].cost < 5:
+        elif cards[best_card].card_type == 0 and cards[best_card].cost < 4:
             self.picked_card_type[1] += 1
-        elif cards[best_card].card_type == 0 and cards[best_card].cost < 7:
+        elif cards[best_card].card_type == 0 and cards[best_card].cost < 6:
             self.picked_card_type[2] += 1
-        elif cards[best_card].card_type == 0 and cards[best_card].cost < 9:
+        elif cards[best_card].card_type == 0 and cards[best_card].cost < 8:
             self.picked_card_type[3] += 1
         elif cards[best_card].card_type == 0:
             self.picked_card_type[4] += 1
-        elif cards[best_card].card_type == 1 or cards[best_card].card_type == 2 or cards[best_card].card_type == 3:
+        elif cards[best_card].card_type == 1:
             self.picked_card_type[5] += 1
+        elif cards[best_card].card_type == 2:
+            self.picked_card_type[6] += 1
+        elif cards[best_card].card_type == 3:
+            self.picked_card_type[7] += 1
 
         # print(str(self.l_cards_values[cards[0].card_id - 1]) + " " + str(self.l_cards_values[cards[1].card_id - 1]) + " " + str(self.l_cards_values[cards[2].card_id - 1]) + " " + str(best_card), file=sys.stderr)
         self.l_all_cards_picked.append(cards[best_card])
         return best_card
 
-    def select_bestcard(self, cards):  # mejorar(priorizar drain???
+    def select_bestcard(self, cards):
         n = 0
         favorite = []
-        # for c in cards:
-        # if self.l_cards_values[c.card_id - 1] == 1:
-        #     favorite.append(c)
         if len(favorite) > 0:
             r = random.randint(0, len(favorite) - 1)
             return cards.index(favorite[r])
@@ -475,18 +523,31 @@ class Draft:
         l_percent = []
         for c in cards:
             p = 0
+            extra = 0
             if c.card_type == 0 and c.cost < 2:
                 p = (self.prefer_card_type[0] - self.picked_card_type[0])
             elif c.card_type == 0 and c.cost < 4:
                 p = (self.prefer_card_type[1] - self.picked_card_type[1])
             elif c.card_type == 0 and c.cost < 6:
                 p = (self.prefer_card_type[2] - self.picked_card_type[2])
-            elif c.card_type == 0 and c.cost <= 8:
+            elif c.card_type == 0 and c.cost < 8:
                 p = (self.prefer_card_type[3] - self.picked_card_type[3])
             elif c.card_type == 0:
                 p = (self.prefer_card_type[4] - self.picked_card_type[4])
-            elif c.card_type == 1 or c.card_type == 2 or c.card_type == 3:
+            elif c.card_type == 1:
                 p = (self.prefer_card_type[5] - self.picked_card_type[5])
+            elif c.card_type == 2:
+                p = (self.prefer_card_type[6] - self.picked_card_type[6])
+            elif c.card_type == 3:
+                p = (self.prefer_card_type[7] - self.picked_card_type[7])
+            if (c.charge):
+                p *= 1.125
+            if (c.drain):
+                p *= 1.2
+            if (c.guard):
+                p *= 1.2
+            if (c.lethal):
+                p *= 1.125
             l_percent.append(p)
         result = random.uniform(0, np.sum(l_percent))
         if result == 0:
@@ -498,8 +559,8 @@ class Draft:
         else:
             n = 2
         print(
-            str(l_percent[0]) + ", " + str(l_percent[1]) + ", " + str(l_percent[2]) + " = " + str(result) + " = " + str(
-                n), file=sys.stderr)
+        str(l_percent[0]) + ", " + str(l_percent[1]) + ", " + str(l_percent[2]) + " = " + str(result) + " = " + str(n),
+        file=sys.stderr)
         return n
 
 
