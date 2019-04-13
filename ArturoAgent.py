@@ -238,13 +238,15 @@ class State:
         elif len(self.l_cards_on_right_lane_player) == 3:
              self.summon_card_order(c, self.LANE_LEFT)
         else:
-            left_lane_per = 3 - len(self.l_cards_on_left_lane_player)
-            right_lane_per = 3 - len(self.l_cards_on_right_lane_player)
-            r = random.randint(0, left_lane_per + right_lane_per -1)
-            if r < left_lane_per:
+            if len(self.l_cards_on_right_lane_opponent) > len(self.l_cards_on_left_lane_opponent):
+                self.summon_card_order(c, self.LANE_RIGHT)
+            elif len(self.l_cards_on_right_lane_opponent) < len(self.l_cards_on_left_lane_opponent):
                 self.summon_card_order(c, self.LANE_LEFT)
             else:
-                self.summon_card_order(c, self.LANE_RIGHT)
+                if len(self.l_cards_on_left_lane_player) <= len(self.l_cards_on_right_lane_player):
+                    self.summon_card_order(c, self.LANE_LEFT)
+                else:
+                    self.summon_card_order(c, self.LANE_RIGHT)
 
     def use_green_card(self, c):
         r = random.randint(0,  len(self.l_cards_on_player_board) - 1)
@@ -289,11 +291,14 @@ class State:
 
         else:
             if not c.ward or not c.guard:
-                r = random.randint(-1, len(enemy_cards)-1)
-                if (r < 0) or (self.other_can_kill(c, enemy_cards[r])):
-                    self.attack_order(c, -1)
+                if(len(enemy_cards) > 0):
+                    r = random.randint(0, len(enemy_cards)-1)
+                    if self.other_can_kill(c, enemy_cards[r]):
+                        self.attack_order(c, -1)
+                    else:
+                        self.attacking_card(c, enemy_cards[r])
                 else:
-                    self.attacking_card(c, enemy_cards[r])
+                    self.attack_order(c, -1)
             else:
                 self.attack_order(c, -1)
 
@@ -495,6 +500,8 @@ class Draft:
                 p = (self.prefer_card_type[5] - self.picked_card_type[5])
             else:
                 p = (self.prefer_card_type[6] - self.picked_card_type[6])
+            if c.card_type == 0 and c.guard:
+                p += 6
             l_percent.append(p)
         result = random.uniform(0, np.sum(l_percent))
         if result == 0:
