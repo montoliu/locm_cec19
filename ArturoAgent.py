@@ -260,15 +260,12 @@ class State:
             self.delete_card(self.l_cards_on_opponent_board[r])
 
     def use_blue_card(self, c):
-        if c.defense < 0:
-            r = random.randint(-1, len(self.l_cards_on_opponent_board) - 1)
-            if r < 0:
-                self.use_item_order(c, -1)
-            else:
-                self.use_item_order(c, self.l_cards_on_opponent_board[r])
-                self.l_cards_on_opponent_board[r].defense -= c.defense
-                if self.l_cards_on_opponent_board[r].defense <= 0:
-                    self.delete_card(self.l_cards_on_opponent_board[r])
+        if (c.defense < 0) and (len(self.l_cards_on_opponent_board) > 0):
+            r = random.randint(0, len(self.l_cards_on_opponent_board) - 1)
+            self.use_item_order(c, self.l_cards_on_opponent_board[r])
+            self.l_cards_on_opponent_board[r].defense -= c.defense
+            if self.l_cards_on_opponent_board[r].defense <= 0:
+                self.delete_card(self.l_cards_on_opponent_board[r])
 
         else:
             self.use_item_order(c, -1)
