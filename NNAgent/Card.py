@@ -38,8 +38,11 @@ class Card:
             elif c == 'W':
                 self.ward = True
 
+    # ----------------------------------------------
+    # Return the string with cards on board data for NN
+    # ----------------------------------------------
     def data_string(self):
-        data_string = str(self.attack) + ',' + str(self.defense) + ','
+        data_string = str(self.attack) + ',' + str(self.defense)
         for c in self.abilities:
             data_string += ','
             if c != '-':

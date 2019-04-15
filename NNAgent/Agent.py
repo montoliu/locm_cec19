@@ -74,45 +74,15 @@ class Agent:
         print ("PASS")
 
     # ----------------------------------------------
-    #Print state, laststate, reward, estrategi
+    #Calculate reward
     # ----------------------------------------------
-    def string_state(self, state):
-        all_string = state.player1.data_string() + ',' + state.player2.data_string()
-        for i in range(0, 8):
-            all_string += ','
-            if len(state.l_cards_on_player_hand) < i:
-                all_string += state.l_cards_on_player_hand[i].card_id
-            else:
-                all_string += '0'
-        for i in range(0, 3):
-            all_string += ','
-            if len(state.l_cards_on_left_lane_player) < i:
-                all_string += state.l_cards_on_player_hand[i].data_string()
-            else:
-                all_string += '00000000'
-        for i in range(0, 3):
-            all_string += ','
-            if len(state.l_cards_on_right_lane_player) < i:
-                all_string += state.l_cards_on_player_hand[i].data_string()
-            else:
-                all_string += '00000000'
-        for i in range(0, 3):
-            all_string += ','
-            if len(state.l_cards_on_left_lane_opponent) < i:
-                all_string += state.l_cards_on_player_hand[i].data_string()
-            else:
-                all_string += '00000000'
-        for i in range(0, 3):
-            all_string += ','
-            if len(state.l_cards_on_right_lane_opponent) < i:
-                all_string += state.l_cards_on_player_hand[i].data_string()
-            else:
-                all_string += '00000000'
-
     def reward(self):
         return self.state.player1.hp - self.last_state.player1.hp + self.last_state.player2.hp - self.state.player2.hp
 
+    # ----------------------------------------------
+    # Printo to file the string to NN
+    # ----------------------------------------------
     def print_nn(self):
-        string_to_print = self.string_state(self.last_state) + ',' + self.string_state(self.state) + ',' + str(self.last_strategy) + ',' + str(self.reward())
+        string_to_print = self.last_state.string_state() + ',' + self.state.string_state() + ',' + str(self.last_strategy) + ',' + str(self.reward())
         file = open("nn_data.txt", "a+")
         file.write(string_to_print)

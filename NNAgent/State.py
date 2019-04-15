@@ -55,3 +55,40 @@ class State:
     # return true is the game is in the draft phase
     def is_draft_phase(self):
         return self.player1.mana == 0
+
+    # ----------------------------------------------
+    # Return the string with state data for NN
+    # ----------------------------------------------
+    def string_state(self):
+        all_string = self.player1.data_string() + ',' + self.player2.data_string()
+        for i in range(0, 8):
+            all_string += ','
+            if len(self.l_cards_on_player_hand) < i:
+                all_string += self.l_cards_on_player_hand[i].card_id
+            else:
+                all_string += '0'
+        for i in range(0, 3):
+            all_string += ','
+            if len(self.l_cards_on_left_lane_player) < i:
+                all_string += self.l_cards_on_player_hand[i].data_string()
+            else:
+                all_string += '00000000'
+        for i in range(0, 3):
+            all_string += ','
+            if len(self.l_cards_on_right_lane_player) < i:
+                all_string += self.l_cards_on_player_hand[i].data_string()
+            else:
+                all_string += '00000000'
+        for i in range(0, 3):
+            all_string += ','
+            if len(self.l_cards_on_left_lane_opponent) < i:
+                all_string += self.l_cards_on_player_hand[i].data_string()
+            else:
+                all_string += '00000000'
+        for i in range(0, 3):
+            all_string += ','
+            if len(self.l_cards_on_right_lane_opponent) < i:
+                all_string += self.l_cards_on_player_hand[i].data_string()
+            else:
+                all_string += '00000000'
+        return all_string
