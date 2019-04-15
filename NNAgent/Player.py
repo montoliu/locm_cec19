@@ -10,3 +10,7 @@ class Player:
         self.cards_remaining = cards_remaining  # the number of cards in the player's deck
         self.rune = rune                        # the next remaining rune of a player
         self.draw = draw                        # the additional number of drawn cards
+
+    def data_string(self):
+        data_string = str(self.hp) + ',' + str(self.mana) + ',' + str(self.cards_remaining) + ',' + str(self.rune) + str(self.draw)
+        return data_string

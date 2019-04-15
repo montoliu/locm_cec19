@@ -37,3 +37,13 @@ class Card:
                 self.lethal = True
             elif c == 'W':
                 self.ward = True
+
+    def data_string(self):
+        data_string = str(self.attack) + ',' + str(self.defense) + ','
+        for c in self.abilities:
+            data_string += ','
+            if c != '-':
+                data_string += str(1)
+            else:
+                data_string += str(0)
+        return data_string
