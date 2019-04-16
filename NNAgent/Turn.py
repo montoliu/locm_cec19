@@ -1,8 +1,8 @@
-import AttackHead as ah
-import AttackCards as ac
-import SummonLeft as sl
-import SummonRight as sr
-import SummonBalanced as sb
+import Strategies.AttackHead as ah
+import Strategies.AttackCards as ac
+import Strategies.SummonLeft as sl
+import Strategies.SummonRight as sr
+import Strategies.SummonBalanced as sb
 import copy
 # ------------------------------------------------------------
 # Turn information
