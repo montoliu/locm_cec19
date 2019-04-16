@@ -4,6 +4,8 @@ import SummonLeft as sl
 import SummonRight as sr
 import SummonBalanced as sb
 import copy
+
+
 # ------------------------------------------------------------
 # Turn information
 # ------------------------------------------------------------

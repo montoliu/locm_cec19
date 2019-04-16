@@ -1,4 +1,5 @@
 
+
 class SummonRight:
     def __init__(self, state):
 

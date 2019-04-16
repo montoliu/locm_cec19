@@ -31,7 +31,7 @@ class Agent:
         self.TYPE_BLUE = 3
 
     # ------------------------------------------------------------
-    # read the input and fill corresponfing classes
+    # Read the input
     # ------------------------------------------------------------
     def read_input(self):
         player_health1, player_mana1, player_deck1, player_rune1, player_draw1 = [int(j) for j in input().split()]
@@ -76,17 +76,16 @@ class Agent:
     # IA for battle
     # ----------------------------------------------
     def ia_battle(self):
-        self.summon_strategy = random.randint(0, 3)
-        self.attack_strategy = random.randint(0, 2)
+        self.summon_strategy = random.randint(1, 3)
+        self.attack_strategy = random.randint(1, 2)
         turn = tr.Turn(self.state, self.summon_strategy, self.attack_strategy)
         if len(turn.l_turn) == 0:
-            print ("PASS")
+            print("PASS")
         else:
             turn_string = ""
             for action in turn.l_turn:
                 turn_string += action
             print(turn_string)
-
 
     # ----------------------------------------------
     #Calculate reward
@@ -95,7 +94,7 @@ class Agent:
         return self.state.player1.hp - self.last_state.player1.hp + self.last_state.player2.hp - self.state.player2.hp
 
     # ----------------------------------------------
-    # Printo to file the string to NN
+    # Print to file the string to NN
     # ----------------------------------------------
     def print_NN(self, output_file):
         string_to_print = self.last_state.string_state() + ','

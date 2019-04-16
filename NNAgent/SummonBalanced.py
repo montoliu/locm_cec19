@@ -1,5 +1,6 @@
 import random
 
+
 class SummonBalanced:
     def __init__(self, state):
 

@@ -1,6 +1,5 @@
 
 
-
 class AttackCards:
     def __init__(self, state):
 

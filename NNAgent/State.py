@@ -24,12 +24,12 @@ class State:
         self.TYPE_BLUE = 3
 
         self.l_actions = []
-        self.l_cards_on_player_hand = []         # list of cards on player hand
-        self.l_cards_on_left_lane_player = []    # list of cards on the left side of the player board
-        self.l_cards_on_left_lane_opponent = []  # list of cards on the left side of the opponent board
-        self.l_cards_on_right_lane_player = []   # list of cards on the right side of the player board
-        self.l_cards_on_right_lane_opponent = [] # list of cards on the right side of the opponent board
-        self.l_left_opponent_cards_guard = []    # list of cards on the right side of the opponent board
+        self.l_cards_on_player_hand = []          # list of cards on player hand
+        self.l_cards_on_left_lane_player = []     # list of cards on the left side of the player board
+        self.l_cards_on_left_lane_opponent = []   # list of cards on the left side of the opponent board
+        self.l_cards_on_right_lane_player = []    # list of cards on the right side of the player board
+        self.l_cards_on_right_lane_opponent = []  # list of cards on the right side of the opponent board
+        self.l_left_opponent_cards_guard = []     # list of cards on the right side of the opponent board
         self.l_right_opponent_cards_guard = []    # list of cards on the right side of the opponent board
 
         if not self.is_draft_phase():
