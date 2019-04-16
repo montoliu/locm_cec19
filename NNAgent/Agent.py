@@ -96,7 +96,7 @@ class Agent:
     # ----------------------------------------------
     # Print to file the string to NN
     # ----------------------------------------------
-    def print_NN(self, output_file):
+    def print_NN(self):
         string_to_print = self.last_state.string_state() + ','
         string_to_print += self.state.string_state() + ','
         string_to_print += str(self.last_strategy) + ','

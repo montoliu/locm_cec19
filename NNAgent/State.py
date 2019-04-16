@@ -55,7 +55,7 @@ class State:
                     self.l_left_opponent_cards_guard.append(c)
             elif c.location == self.LOCATION_PLAYER_SIDE and c.lane == self.LANE_RIGHT:
                 self.l_cards_on_right_lane_player.append(c)
-                self.l_right_cards_can_attack.appent(c)
+                self.l_right_cards_can_attack.append(c)
             elif c.location == self.LOCATION_OPPONENT_SIDE and c.lane == self.LANE_RIGHT:
                 self.l_cards_on_right_lane_opponent.append(c)
                 if c.guard:
