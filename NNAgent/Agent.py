@@ -3,7 +3,7 @@ import copy
 import Card as cd
 import Player as pl
 import State as st
-
+import Turn as tr
 
 # ------------------------------------------------------------
 # Agent
@@ -12,8 +12,12 @@ class Agent:
     def __init__(self):
         self.state = None
         self.last_state = None
-        self.strategy = None
-        self.last_strategy = None
+        self.strategy = 0
+        self.last_strategy = 0
+        self.summon_strategy = 0
+        self.last_summon_strategy = 0
+        self.attack_strategy = 0
+        self.last_attack_strategy = 0
         self.LOCATION_IN_HAND = 0
         self.LOCATION_PLAYER_SIDE = 1
         self.LOCATION_OPPONENT_SIDE = -1
@@ -72,7 +76,16 @@ class Agent:
     # IA for battle
     # ----------------------------------------------
     def ia_battle(self):
-        print("PASS")
+        self.summon_strategy = random.randint(0, 3)
+        self.attack_strategy = random.randint(0, 2)
+        turn = tr.Turn(self.state, self.summon_strategy, self.attack_strategy)
+        if len(turn.l_turn) == 0:
+            print ("PASS")
+        else:
+            turn_string = ""
+            for action in turn.l_turn:
+                turn_string += action
+            print(turn_string)
 
 
     # ----------------------------------------------
