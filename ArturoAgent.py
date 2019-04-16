@@ -83,6 +83,8 @@ class State:
         self.l_cards_on_opponent_board = []
         self.l_left_opponent_cards_guard = []
         self.l_right_opponent_cards_guard = []
+        self.l_left_player_cards_guard = []
+        self.l_right_player_cards_guard = []
 
         if not self.is_draft_phase():
             self.classify_cards()
@@ -94,6 +96,8 @@ class State:
             print("l_cards_on_left_lane_opponent: " + str(len(self.l_cards_on_left_lane_opponent)), file=sys.stderr)
             print("l_cards_on_right_lane_player: " + str(len(self.l_cards_on_right_lane_player)), file=sys.stderr)
             print("l_cards_on_right_lane_opponent: " + str(len(self.l_cards_on_right_lane_opponent)), file=sys.stderr)
+            print("l_left_player_cards_guard: " + str(len(self.l_left_player_cards_guard)), file=sys.stderr)
+            print("l_right_player_cards_guard: " + str(len(self.l_right_player_cards_guard)), file=sys.stderr)
             print("l_actions: " + str(len(self.l_actions)), file=sys.stderr)
             print(self.l_actions, file=sys.stderr)
 
@@ -111,6 +115,8 @@ class State:
                 self.l_cards_on_left_lane_player.append(c)
                 self.l_cards_can_attack.append(c)
                 self.l_cards_on_player_board.append(c)
+                if c.guard:
+                    self.l_left_player_cards_guard.append(c)
             elif c.location == self.LOCATION_OPPONENT_SIDE and c.lane == self.LANE_LEFT:
                 self.l_cards_on_left_lane_opponent.append(c)
                 self.l_cards_on_opponent_board.append(c)
@@ -120,6 +126,8 @@ class State:
                 self.l_cards_on_right_lane_player.append(c)
                 self.l_cards_can_attack.append(c)
                 self.l_cards_on_player_board.append(c)
+                if c.guard:
+                    self.l_right_player_cards_guard.append(c)
             elif c.location == self.LOCATION_OPPONENT_SIDE and c.lane == self.LANE_RIGHT:
                 self.l_cards_on_right_lane_opponent.append(c)
                 self.l_cards_on_opponent_board.append(c)
@@ -237,6 +245,11 @@ class State:
             self.summon_card_order(c, self.LANE_RIGHT)
         elif len(self.l_cards_on_right_lane_player) == 3:
              self.summon_card_order(c, self.LANE_LEFT)
+        elif c.guard:
+            if len(self.l_left_player_cards_guard) <= len(self.l_right_player_cards_guard):
+                self.summon_card_order(c, self.LANE_LEFT)
+            else:
+                self.summon_card_order(c, self.LANE_RIGHT)
         else:
             if len(self.l_cards_on_right_lane_opponent) > len(self.l_cards_on_left_lane_opponent):
                 self.summon_card_order(c, self.LANE_RIGHT)
@@ -250,6 +263,11 @@ class State:
 
     def use_green_card(self, c):
         r = random.randint(0,  len(self.l_cards_on_player_board) - 1)
+        if c.guard:
+            if self.l_cards_on_player_board[r].lane == self.LANE_LEFT and c not in self.l_left_player_cards_guard:
+                self.l_left_player_cards_guard.append(c)
+            elif self.l_cards_on_player_board[r].lane == self.LANE_RIGHT and c not in self.l_right_player_cards_guard:
+                self.l_right_player_cards_guard.append(c)
         self.use_item_order(c, self.l_cards_on_player_board[r])
 
     def use_red_card(self, c):
@@ -312,6 +330,8 @@ class State:
             self.delete_card(enemy_card)
         if my_card.defense <= 0:
             self.delete_card(my_card)
+        elif my_card.ward == False and enemy_card.lethal:
+            self.delete_card(my_card)
 
     def delete_card(self, c):
         if c.location == self.LOCATION_OPPONENT_SIDE:
@@ -327,8 +347,12 @@ class State:
         else:
             if c.lane == self.LANE_LEFT:
                 self.l_cards_on_left_lane_player.remove(c)
+                if c.guard:
+                    self.l_left_player_cards_guard.remove(c)
             else:
                 self.l_cards_on_right_lane_player.remove(c)
+                if c.guard:
+                    self.l_right_player_cards_guard.remove(c)
 
     def attack_order(self, my_card, target):
         if target == -1:
@@ -347,10 +371,14 @@ class State:
             self.l_turn.append("SUMMON " + str(c.instance_id) + " "+ str(self.LANE_RIGHT) + ";")
             self.l_cards_on_right_lane_player.append(c)
             c.lane = self.LANE_RIGHT
+            if c.guard:
+                self.l_right_player_cards_guard.append(c)
         else:
             self.l_turn.append("SUMMON " + str(c.instance_id) + " "+ str(self.LANE_LEFT) + ";")
             self.l_cards_on_left_lane_player.append(c)
             c.lane = self.LANE_LEFT
+            if c.guard:
+                self.l_left_player_cards_guard.append(c)
         if(c.charge):
             self.l_cards_can_attack.append(c)
         self.l_cards_on_player_board.append(c)
@@ -449,8 +477,8 @@ class AgentRandom():
 class Draft:
     def __init__(self):
         self.l_all_cards_picked = []
-        self.picked_card_type = [0, 0, 0, 0, 0, 0, 0]
-        self.prefer_card_type = [7, 8, 7, 5, 1, 1, 1]
+        self.picked_card_type = [0, 0, 0, 0, 0, 0, 0, 0]
+        self.prefer_card_type = [6, 6, 3, 3, 3, 5, 4, 0]
 
         self.TYPE_CREATURE = 0
         self.TYPE_GREEN = 1
@@ -459,20 +487,22 @@ class Draft:
 
     def pick_card(self, cards):
         best_card = self.select_bestcard(cards)
-        if cards[best_card].card_type == self.TYPE_CREATURE and cards[best_card].cost < 3:
+        if cards[best_card].card_type == self.TYPE_CREATURE and cards[best_card].cost < 2:
             self.picked_card_type[0] += 1
-        elif cards[best_card].card_type == self.TYPE_CREATURE and cards[best_card].cost < 5:
+        elif cards[best_card].card_type == self.TYPE_CREATURE and cards[best_card].cost < 3:
             self.picked_card_type[1] += 1
-        elif cards[best_card].card_type == self.TYPE_CREATURE and cards[best_card].cost < 7:
+        elif cards[best_card].card_type == self.TYPE_CREATURE and cards[best_card].cost < 4:
             self.picked_card_type[2] += 1
-        elif cards[best_card].card_type == self.TYPE_CREATURE and cards[best_card].cost < 13:
+        elif cards[best_card].card_type == self.TYPE_CREATURE and cards[best_card].cost < 5:
             self.picked_card_type[3] += 1
-        elif cards[best_card].card_type == self.TYPE_GREEN:
+        elif cards[best_card].card_type == self.TYPE_CREATURE and cards[best_card].cost < 6:
             self.picked_card_type[4] += 1
-        elif cards[best_card].card_type == self.TYPE_RED:
+        elif cards[best_card].card_type == self.TYPE_CREATURE and cards[best_card].cost < 7:
             self.picked_card_type[5] += 1
-        else:
+        elif cards[best_card].card_type == self.TYPE_CREATURE:
             self.picked_card_type[6] += 1
+        else:
+            self.picked_card_type[7] += 1
 
         self.l_all_cards_picked.append(cards[best_card])
         return best_card
@@ -483,20 +513,22 @@ class Draft:
         l_percent = []
         for c in cards:
             p = 0
-            if c.card_type == 0 and c.cost < 3:
+            if c.card_type == self.TYPE_CREATURE and c.cost < 2:
                 p = (self.prefer_card_type[0] - self.picked_card_type[0])
-            elif c.card_type == 0 and c.cost < 5:
+            elif c.card_type == self.TYPE_CREATURE and c.cost < 3:
                 p = (self.prefer_card_type[1] - self.picked_card_type[1])
-            elif c.card_type == 0 and c.cost < 7:
+            elif c.card_type == self.TYPE_CREATURE and c.cost < 4:
                 p = (self.prefer_card_type[2] - self.picked_card_type[2])
-            elif c.card_type == 0 and c.cost < 13:
+            elif c.card_type == self.TYPE_CREATURE and c.cost < 5:
                 p = (self.prefer_card_type[3] - self.picked_card_type[3])
-            elif c.card_type == 1:
+            elif c.card_type == self.TYPE_CREATURE and c.cost < 6:
                 p = (self.prefer_card_type[4] - self.picked_card_type[4])
-            elif c.card_type == 2:
+            elif c.card_type == self.TYPE_CREATURE:
                 p = (self.prefer_card_type[5] - self.picked_card_type[5])
-            else:
+            elif c.card_type == self.TYPE_CREATURE and c.cost < 5:
                 p = (self.prefer_card_type[6] - self.picked_card_type[6])
+            else:
+                p = (self.prefer_card_type[7] - self.picked_card_type[7])
             if c.card_type == 0 and c.guard:
                 p += 6
             l_percent.append(p)
