@@ -72,23 +72,23 @@ class State:
             if i < len(self.l_cards_on_left_lane_player):
                 all_string += self.l_cards_on_player_hand[i].data_string()
             else:
-                all_string += '00000000'
+                all_string += '0,0,0,0,0,0,0,0'
         for i in range(0, 3):
             all_string += ','
             if i < len(self.l_cards_on_right_lane_player):
                 all_string += self.l_cards_on_player_hand[i].data_string()
             else:
-                all_string += '00000000'
+                all_string += '0,0,0,0,0,0,0,0'
         for i in range(0, 3):
             all_string += ','
             if i < len(self.l_cards_on_left_lane_opponent):
                 all_string += self.l_cards_on_player_hand[i].data_string()
             else:
-                all_string += '00000000'
+                all_string += '0,0,0,0,0,0,0,0'
         for i in range(0, 3):
             all_string += ','
             if i < len(self.l_cards_on_right_lane_opponent):
                 all_string += self.l_cards_on_player_hand[i].data_string()
             else:
-                all_string += '00000000'
+                all_string += '0,0,0,0,0,0,0,0'
         return all_string

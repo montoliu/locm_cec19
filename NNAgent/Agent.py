@@ -1,4 +1,5 @@
 import random
+import copy
 import Card as cd
 import Player as pl
 import State as st
@@ -48,11 +49,11 @@ class Agent:
 
         player1 = pl.Player(player_health1, player_mana1, player_deck1, player_rune1, player_draw1)
         player2 = pl.Player(player_health2, player_mana2, player_deck2, player_rune2, player_draw2)
-        self.last_state = self.state
+        self.last_state = copy.copy(self.state)
         self.state = st.State(player1, player2, opponent_hand, l_opponent_actions, l_cards)
 
     # ----------------------------------------------
-    # Select best action to do depending on the pahse
+    # Select best action to do depending on the phase
     # ----------------------------------------------
     def act(self):
         if self.state.is_draft_phase():
@@ -64,14 +65,15 @@ class Agent:
     # IA for pick
     # ----------------------------------------------
     def ia_draft(self):
-        n = random.randint(0,2)
+        n = random.randint(0, 2)
         print("PICK " + str(n))
 
     # ----------------------------------------------
     # IA for battle
     # ----------------------------------------------
     def ia_battle(self):
-        print ("PASS")
+        print("PASS")
+
 
     # ----------------------------------------------
     #Calculate reward
@@ -83,14 +85,8 @@ class Agent:
     # Printo to file the string to NN
     # ----------------------------------------------
     def print_NN(self, output_file):
-        #output_file.write("1\n")
-        #string_to_print = self.last_state.string_state() + ','
-        #output_file.write("2\n")
-        #string_to_print += self.state.string_state() + ','
-        #output_file.write("3\n")
-        #string_to_print += str(self.last_strategy) + ','
-        #output_file.write("4\n")
-        #string_to_print += str(self.reward())
-        #output_file.write("5\n")
-        #output_file.write(string_to_print)
-        a = 1
+        string_to_print = self.last_state.string_state() + ','
+        string_to_print += self.state.string_state() + ','
+        string_to_print += str(self.last_strategy) + ','
+        string_to_print += str(self.reward())
+        return string_to_print

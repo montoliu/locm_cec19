@@ -46,7 +46,7 @@ class Card:
         for c in self.abilities:
             data_string += ','
             if c != '-':
-                data_string += str(1)
+                data_string += "1"
             else:
-                data_string += str(0)
+                data_string += "0"
         return data_string
