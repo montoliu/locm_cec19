@@ -63,31 +63,31 @@ class State:
         all_string = self.player1.data_string() + ',' + self.player2.data_string()
         for i in range(0, 8):
             all_string += ','
-            if len(self.l_cards_on_player_hand) < i:
-                all_string += self.l_cards_on_player_hand[i].card_id
+            if i < len(self.l_cards_on_player_hand):
+                all_string += str(self.l_cards_on_player_hand[i].card_id)
             else:
                 all_string += '0'
         for i in range(0, 3):
             all_string += ','
-            if len(self.l_cards_on_left_lane_player) < i:
+            if i < len(self.l_cards_on_left_lane_player):
                 all_string += self.l_cards_on_player_hand[i].data_string()
             else:
                 all_string += '00000000'
         for i in range(0, 3):
             all_string += ','
-            if len(self.l_cards_on_right_lane_player) < i:
+            if i < len(self.l_cards_on_right_lane_player):
                 all_string += self.l_cards_on_player_hand[i].data_string()
             else:
                 all_string += '00000000'
         for i in range(0, 3):
             all_string += ','
-            if len(self.l_cards_on_left_lane_opponent) < i:
+            if i < len(self.l_cards_on_left_lane_opponent):
                 all_string += self.l_cards_on_player_hand[i].data_string()
             else:
                 all_string += '00000000'
         for i in range(0, 3):
             all_string += ','
-            if len(self.l_cards_on_right_lane_opponent) < i:
+            if i < len(self.l_cards_on_right_lane_opponent):
                 all_string += self.l_cards_on_player_hand[i].data_string()
             else:
                 all_string += '00000000'

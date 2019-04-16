@@ -28,6 +28,7 @@ class Agent:
     # ------------------------------------------------------------
     # read the input and fill corresponfing classes
     # ------------------------------------------------------------
+    def read_input(self):
         player_health1, player_mana1, player_deck1, player_rune1, player_draw1 = [int(j) for j in input().split()]
         player_health2, player_mana2, player_deck2, player_rune2, player_draw2 = [int(j) for j in input().split()]
 
@@ -47,8 +48,7 @@ class Agent:
 
         player1 = pl.Player(player_health1, player_mana1, player_deck1, player_rune1, player_draw1)
         player2 = pl.Player(player_health2, player_mana2, player_deck2, player_rune2, player_draw2)
-        if self.state.player1.mana is not 0:
-            self.last_state = self.state
+        self.last_state = self.state
         self.state = st.State(player1, player2, opponent_hand, l_opponent_actions, l_cards)
 
     # ----------------------------------------------
@@ -82,7 +82,15 @@ class Agent:
     # ----------------------------------------------
     # Printo to file the string to NN
     # ----------------------------------------------
-    def print_nn(self):
-        string_to_print = self.last_state.string_state() + ',' + self.state.string_state() + ',' + str(self.last_strategy) + ',' + str(self.reward())
-        file = open("nn_data.txt", "a+")
-        file.write(string_to_print)
+    def print_NN(self, output_file):
+        #output_file.write("1\n")
+        #string_to_print = self.last_state.string_state() + ','
+        #output_file.write("2\n")
+        #string_to_print += self.state.string_state() + ','
+        #output_file.write("3\n")
+        #string_to_print += str(self.last_strategy) + ','
+        #output_file.write("4\n")
+        #string_to_print += str(self.reward())
+        #output_file.write("5\n")
+        #output_file.write(string_to_print)
+        a = 1
