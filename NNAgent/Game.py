@@ -3,7 +3,7 @@ import Agent as ag
 if __name__ == '__main__':
     agent = ag.Agent()
     i_turn = 1
-    NN = True
+    NN = False
 
     if NN:
         nn_file = open("nn_data.txt", "a")

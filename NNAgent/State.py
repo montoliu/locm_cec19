@@ -31,6 +31,8 @@ class State:
         self.l_cards_on_right_lane_opponent = []  # list of cards on the right side of the opponent board
         self.l_left_opponent_cards_guard = []     # list of cards on the right side of the opponent board
         self.l_right_opponent_cards_guard = []    # list of cards on the right side of the opponent board
+        self.l_left_cards_can_attack = []
+        self.l_right_cards_can_attack = []
 
         if not self.is_draft_phase():
             self.classify_cards()
@@ -46,12 +48,14 @@ class State:
                 self.l_cards_on_player_hand.append(c)
             elif c.location == self.LOCATION_PLAYER_SIDE and c.lane == self.LANE_LEFT:
                 self.l_cards_on_left_lane_player.append(c)
+                self.l_left_cards_can_attack.append(c)
             elif c.location == self.LOCATION_OPPONENT_SIDE and c.lane == self.LANE_LEFT:
                 self.l_cards_on_left_lane_opponent.append(c)
                 if c.guard:
                     self.l_left_opponent_cards_guard.append(c)
             elif c.location == self.LOCATION_PLAYER_SIDE and c.lane == self.LANE_RIGHT:
                 self.l_cards_on_right_lane_player.append(c)
+                self.l_right_cards_can_attack.appent(c)
             elif c.location == self.LOCATION_OPPONENT_SIDE and c.lane == self.LANE_RIGHT:
                 self.l_cards_on_right_lane_opponent.append(c)
                 if c.guard:

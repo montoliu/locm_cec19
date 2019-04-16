@@ -76,8 +76,8 @@ class Agent:
     # IA for battle
     # ----------------------------------------------
     def ia_battle(self):
-        self.summon_strategy = random.randint(1, 3)
-        self.attack_strategy = random.randint(1, 2)
+        self.summon_strategy = 2
+        self.attack_strategy = 0
         turn = tr.Turn(self.state, self.summon_strategy, self.attack_strategy)
         if len(turn.l_turn) == 0:
             print("PASS")
