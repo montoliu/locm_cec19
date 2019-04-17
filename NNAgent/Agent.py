@@ -76,8 +76,8 @@ class Agent:
     # IA for battle
     # ----------------------------------------------
     def ia_battle(self):
-        self.summon_strategy = 2
-        self.attack_strategy = 0
+        self.summon_strategy = random.randint(1, 3)
+        self.attack_strategy = random.randint(1, 2)
         turn = tr.Turn(self.state, self.summon_strategy, self.attack_strategy)
         if len(turn.l_turn) == 0:
             print("PASS")
@@ -96,7 +96,7 @@ class Agent:
     # ----------------------------------------------
     # Print to file the string to NN
     # ----------------------------------------------
-    def print_NN(self):
+    def print_NN(self, output_file):
         string_to_print = self.last_state.string_state() + ','
         string_to_print += self.state.string_state() + ','
         string_to_print += str(self.last_strategy) + ','

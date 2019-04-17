@@ -16,9 +16,12 @@ class SummonRight:
                 continue
             if c.card_type == self.state.TYPE_CREATURE and len(self.state.l_cards_on_right_lane_player) >= 3:
                 l_cards_can_summon_after.append(c)
+                self.state.l_cards_on_player_hand.remove(c)
                 continue
             elif c.card_type == self.state.TYPE_CREATURE:
                 self.summon(c)
+            else:
+                self.state.l_cards_on_player_hand.remove(c)
         self.state.l_cards_on_player_hand = l_cards_can_summon_after
 
     def summon(self,c):

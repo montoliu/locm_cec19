@@ -11,6 +11,7 @@ import copy
 # ------------------------------------------------------------
 class Turn:
     def __init__(self, state, summon_strategy, attack_strategy):
+
         self.turn_state = copy.copy(state)
         self.summon_strategy = summon_strategy
         self.attack_strategy = attack_strategy
