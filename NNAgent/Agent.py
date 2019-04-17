@@ -4,6 +4,8 @@ import Card as cd
 import Player as pl
 import State as st
 import Turn as tr
+import Draft as dr
+
 
 # ------------------------------------------------------------
 # Agent
@@ -12,6 +14,7 @@ class Agent:
     def __init__(self):
         self.state = None
         self.last_state = None
+        self.draft = dr.Draft()
         self.strategy = 0
         self.last_strategy = 0
         self.summon_strategy = 0
@@ -69,8 +72,8 @@ class Agent:
     # IA for pick
     # ----------------------------------------------
     def ia_draft(self):
-        n = random.randint(0, 2)
-        print("PICK " + str(n))
+        best_card = self.draft.pick_card(self.state.l_cards)
+        print("PICK " + str(best_card))
 
     # ----------------------------------------------
     # IA for battle
