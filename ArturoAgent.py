@@ -40,11 +40,11 @@ class Card:
         self.ward = False
         for c in abilities:
             if c == 'B': self.breakthrough = True
-            elif c == 'C': self.charge = True
-            elif c == 'D':self.drain = True
-            elif c == 'G': self.guard = True
-            elif c == 'L': self.lethal = True
-            elif c == 'W': self.ward = True
+            if c == 'C': self.charge = True
+            if c == 'D':self.drain = True
+            if c == 'G': self.guard = True
+            if c == 'L': self.lethal = True
+            if c == 'W': self.ward = True
 
 
 # ------------------------------------------------------------
@@ -246,21 +246,15 @@ class State:
         elif len(self.l_cards_on_right_lane_player) == 3:
              self.summon_card_order(c, self.LANE_LEFT)
         elif c.guard:
-            if len(self.l_left_player_cards_guard) <= len(self.l_right_player_cards_guard):
+            if len(self.l_left_player_cards_guard) < len(self.l_right_player_cards_guard):
                 self.summon_card_order(c, self.LANE_LEFT)
-            else:
+            elif len(self.l_left_player_cards_guard) > len(self.l_right_player_cards_guard):
                 self.summon_card_order(c, self.LANE_RIGHT)
+            else:
+                self.checking_where_summon(c)
         else:
-            if len(self.l_cards_on_right_lane_opponent) > len(self.l_cards_on_left_lane_opponent):
-                self.summon_card_order(c, self.LANE_RIGHT)
-            elif len(self.l_cards_on_right_lane_opponent) < len(self.l_cards_on_left_lane_opponent):
-                self.summon_card_order(c, self.LANE_LEFT)
-            else:
-                if len(self.l_cards_on_left_lane_player) <= len(self.l_cards_on_right_lane_player):
-                    self.summon_card_order(c, self.LANE_LEFT)
-                else:
-                    self.summon_card_order(c, self.LANE_RIGHT)
-
+            self.checking_where_summon(c)
+#region items
     def use_green_card(self, c):
         r = random.randint(0,  len(self.l_cards_on_player_board) - 1)
         if c.guard:
@@ -271,11 +265,14 @@ class State:
         self.use_item_order(c, self.l_cards_on_player_board[r])
 
     def use_red_card(self, c):
-        r = random.randint(0, len(self.l_cards_on_opponent_board)-1)
-        self.use_item_order(c, self.l_cards_on_opponent_board[r])
-        self.l_cards_on_opponent_board[r].defense -= c.defense
-        if self.l_cards_on_opponent_board[r].defense <= 0:
-            self.delete_card(self.l_cards_on_opponent_board[r])
+        enemy_index = self.evaluate_enemy_cards()
+        enemy_card = self.l_cards_on_opponent_board[enemy_index]
+        self.use_item_order(c,enemy_card)
+        print("red_card_defense: " + str(c.defense), file=sys.stderr)
+        enemy_card.defense += c.defense
+        enemy_card.attack += c.attack
+        if enemy_card.defense <= 0:
+            self.delete_card(enemy_card)
 
     def use_blue_card(self, c):
         if (c.defense < 0) and (len(self.l_cards_on_opponent_board) > 0):
@@ -284,9 +281,9 @@ class State:
             self.l_cards_on_opponent_board[r].defense -= c.defense
             if self.l_cards_on_opponent_board[r].defense <= 0:
                 self.delete_card(self.l_cards_on_opponent_board[r])
-
         else:
             self.use_item_order(c, -1)
+#endregion
 
 
     def checking_lane_and_stats(self, c):
@@ -383,6 +380,33 @@ class State:
             self.l_cards_can_attack.append(c)
         self.l_cards_on_player_board.append(c)
 
+    def checking_where_summon(self, c):
+        if len(self.l_cards_on_right_lane_opponent) > len(self.l_cards_on_left_lane_opponent):
+            self.summon_card_order(c, self.LANE_RIGHT)
+        elif len(self.l_cards_on_right_lane_opponent) < len(self.l_cards_on_left_lane_opponent):
+            self.summon_card_order(c, self.LANE_LEFT)
+        else:
+            if len(self.l_cards_on_left_lane_player) <= len(self.l_cards_on_right_lane_player):
+                self.summon_card_order(c, self.LANE_LEFT)
+            else:
+                self.summon_card_order(c, self.LANE_RIGHT)
+
+    def evaluate_enemy_cards(self):
+        maxScore = 0
+        for i in range(0, len(self.l_cards_on_opponent_board)):
+            c = self.l_cards_on_opponent_board[i]
+            n = c.attack + c.defense
+            for s in c.abilities:
+                if s == 'B': n += 1
+                if s == 'C': n += 1
+                if s == 'D': n += 1
+                if s == 'G': n += 1
+                if s == 'L': n += 1
+                if s == 'W': n += 1
+            if n > maxScore:
+                maxScore = n
+                card = i
+        return card
 # ------------------------------------------------------------
 # Agent
 # ------------------------------------------------------------
@@ -477,8 +501,8 @@ class AgentRandom():
 class Draft:
     def __init__(self):
         self.l_all_cards_picked = []
-        self.picked_card_type = [0, 0, 0, 0, 0, 0, 0, 0]
-        self.prefer_card_type = [6, 6, 3, 3, 3, 5, 4, 0]
+        self.picked_card_type = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+        self.prefer_card_type = [5, 5, 3, 3, 3, 4, 4, 3, 0, 0]
 
         self.TYPE_CREATURE = 0
         self.TYPE_GREEN = 1
@@ -501,8 +525,12 @@ class Draft:
             self.picked_card_type[5] += 1
         elif cards[best_card].card_type == self.TYPE_CREATURE:
             self.picked_card_type[6] += 1
-        else:
+        elif cards[best_card].card_type == self.TYPE_RED:
             self.picked_card_type[7] += 1
+        elif cards[best_card].card_type == self.TYPE_GREEN:
+            self.picked_card_type[8] += 1
+        else:
+            self.picked_card_type[9] += 1
 
         self.l_all_cards_picked.append(cards[best_card])
         return best_card
@@ -513,7 +541,9 @@ class Draft:
         l_percent = []
         for c in cards:
             p = 0
-            if c.card_type == self.TYPE_CREATURE and c.cost < 2:
+            if c.card_id == 151:
+                p = 100
+            elif c.card_type == self.TYPE_CREATURE and c.cost < 2:
                 p = (self.prefer_card_type[0] - self.picked_card_type[0])
             elif c.card_type == self.TYPE_CREATURE and c.cost < 3:
                 p = (self.prefer_card_type[1] - self.picked_card_type[1])
@@ -523,16 +553,25 @@ class Draft:
                 p = (self.prefer_card_type[3] - self.picked_card_type[3])
             elif c.card_type == self.TYPE_CREATURE and c.cost < 6:
                 p = (self.prefer_card_type[4] - self.picked_card_type[4])
-            elif c.card_type == self.TYPE_CREATURE:
+            elif c.card_type == self.TYPE_CREATURE and c.cost < 7:
                 p = (self.prefer_card_type[5] - self.picked_card_type[5])
-            elif c.card_type == self.TYPE_CREATURE and c.cost < 5:
+            elif c.card_type == self.TYPE_CREATURE:
                 p = (self.prefer_card_type[6] - self.picked_card_type[6])
+            elif c.card_type == self.TYPE_RED:
+                p = (self.prefer_card_type[7] - self.picked_card_type[6])
             else:
-                p = (self.prefer_card_type[7] - self.picked_card_type[7])
+                p = -100
             if c.card_type == 0 and c.guard:
                 p += 6
             l_percent.append(p)
-        result = random.uniform(0, np.sum(l_percent))
+
+        if l_percent[0] >= l_percent[1] and l_percent[0] >= l_percent[2]:
+            n = 0
+        elif l_percent[1] >= l_percent[0] and l_percent[1] >= l_percent[2]:
+            n = 1
+        else:
+            n = 2
+        """result = random.uniform(0, np.sum(l_percent))
         if result == 0:
             return random.randint(0, 2)
         if result <= l_percent[0]:
@@ -540,8 +579,8 @@ class Draft:
         elif result <= (l_percent[0]+l_percent[1]):
             n = 1
         else:
-            n = 2
-        print(str(l_percent[0]) + ", " + str(l_percent[1]) + ", " + str(l_percent[2]) + " = " + str(result) + " = " + str(n), file=sys.stderr)
+            n = 2"""
+        print(str(l_percent[0]) + ", " + str(l_percent[1]) + ", " + str(l_percent[2]) + " = " + " = " + str(n), file=sys.stderr)
         return n
 
 
