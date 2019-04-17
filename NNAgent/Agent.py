@@ -5,8 +5,6 @@ import Player as pl
 import State as st
 import Turn as tr
 import Draft as dr
-
-
 # ------------------------------------------------------------
 # Agent
 # ------------------------------------------------------------
@@ -79,7 +77,7 @@ class Agent:
     # IA for battle
     # ----------------------------------------------
     def ia_battle(self):
-        self.summon_strategy = random.randint(1, 6)
+        self.summon_strategy = 6#random.randint(1, 6)
         self.attack_strategy = random.randint(1, 2)
         turn = tr.Turn(self.state, self.summon_strategy, self.attack_strategy)
         if len(turn.l_turn) == 0:

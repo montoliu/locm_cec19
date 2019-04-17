@@ -1,5 +1,4 @@
 
-
 class SummonCoverOrRight:
     def __init__(self, state):
 

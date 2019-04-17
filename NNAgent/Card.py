@@ -27,15 +27,15 @@ class Card:
         for c in abilities:
             if c == 'B':
                 self.breakthrough = True
-            if c == 'C':
+            elif c == 'C':
                 self.charge = True
-            if c == 'D':
+            elif c == 'D':
                 self.drain = True
-            if c == 'G':
+            elif c == 'G':
                 self.guard = True
-            if c == 'L':
+            elif c == 'L':
                 self.lethal = True
-            if c == 'W':
+            elif c == 'W':
                 self.ward = True
 
     # ----------------------------------------------

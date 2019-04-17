@@ -1,6 +1,3 @@
-import random
-
-
 class SummonCoverOrBalanced:
     def __init__(self, state):
 

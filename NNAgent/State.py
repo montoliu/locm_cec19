@@ -25,6 +25,7 @@ class State:
 
         self.l_actions = []
         self.l_cards_on_player_hand = []          # list of cards on player hand
+        self.l_guard_creatures_on_player_hand = []  # list of guard creatures on player hand
         self.l_cards_on_left_lane_player = []     # list of cards on the left side of the player board
         self.l_cards_on_left_lane_opponent = []   # list of cards on the left side of the opponent board
         self.l_cards_on_right_lane_player = []    # list of cards on the right side of the player board
@@ -33,6 +34,9 @@ class State:
         self.l_right_opponent_cards_guard = []    # list of cards on the right side of the opponent board
         self.l_left_cards_can_attack = []
         self.l_right_cards_can_attack = []
+
+        self.left_cover = False
+        self.right_cover = False
 
         if not self.is_draft_phase():
             self.classify_cards()
@@ -46,9 +50,13 @@ class State:
         for c in self.l_cards:
             if c.location == self.LOCATION_IN_HAND:
                 self.l_cards_on_player_hand.append(c)
+                if c.card_type == self.TYPE_CREATURE and c.guard:
+                    self.l_guard_creatures_on_player_hand.append(c)
             elif c.location == self.LOCATION_PLAYER_SIDE and c.lane == self.LANE_LEFT:
                 self.l_cards_on_left_lane_player.append(c)
                 self.l_left_cards_can_attack.append(c)
+                if c.guard:
+                    self.left_cover = True
             elif c.location == self.LOCATION_OPPONENT_SIDE and c.lane == self.LANE_LEFT:
                 self.l_cards_on_left_lane_opponent.append(c)
                 if c.guard:
@@ -56,6 +64,8 @@ class State:
             elif c.location == self.LOCATION_PLAYER_SIDE and c.lane == self.LANE_RIGHT:
                 self.l_cards_on_right_lane_player.append(c)
                 self.l_right_cards_can_attack.append(c)
+                if c.guard:
+                    self.right_cover = True
             elif c.location == self.LOCATION_OPPONENT_SIDE and c.lane == self.LANE_RIGHT:
                 self.l_cards_on_right_lane_opponent.append(c)
                 if c.guard:
@@ -80,25 +90,25 @@ class State:
         for i in range(0, 3):
             all_string += ','
             if i < len(self.l_cards_on_left_lane_player):
-                all_string += self.l_cards_on_player_hand[i].data_string()
+                all_string += self.l_cards_on_left_lane_player[i].data_string()
             else:
                 all_string += '0,0,0,0,0,0,0,0'
         for i in range(0, 3):
             all_string += ','
             if i < len(self.l_cards_on_right_lane_player):
-                all_string += self.l_cards_on_player_hand[i].data_string()
+                all_string += self.l_cards_on_right_lane_player[i].data_string()
             else:
                 all_string += '0,0,0,0,0,0,0,0'
         for i in range(0, 3):
             all_string += ','
             if i < len(self.l_cards_on_left_lane_opponent):
-                all_string += self.l_cards_on_player_hand[i].data_string()
+                all_string += self.l_cards_on_left_lane_opponent[i].data_string()
             else:
                 all_string += '0,0,0,0,0,0,0,0'
         for i in range(0, 3):
             all_string += ','
             if i < len(self.l_cards_on_right_lane_opponent):
-                all_string += self.l_cards_on_player_hand[i].data_string()
+                all_string += self.l_cards_on_right_lane_opponent[i].data_string()
             else:
                 all_string += '0,0,0,0,0,0,0,0'
         return all_string
