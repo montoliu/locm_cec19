@@ -3,6 +3,10 @@ import AttackCards as ac
 import SummonLeft as sl
 import SummonRight as sr
 import SummonBalanced as sb
+import SummonCoverOrBalanced as scb
+import SummonCoverOrLeft as scl
+import SummonCoverOrRight as scr
+
 import copy
 
 
@@ -34,6 +38,15 @@ class Turn:
             self.l_turn += summon_turn.l_turn
         elif self.summon_strategy == 3:
             summon_turn = sr.SummonRight(self.turn_state)
+            self.l_turn += summon_turn.l_turn
+        elif self.summon_strategy == 4:
+            summon_turn = scb.SummonCoverOrBalanced(self.turn_state)
+            self.l_turn += summon_turn.l_turn
+        elif self.summon_strategy == 5:
+            summon_turn = scl.SummonCoverOrLeft(self.turn_state)
+            self.l_turn += summon_turn.l_turn
+        elif self.summon_strategy == 6:
+            summon_turn = scr.SummonCoverOrRight(self.turn_state)
             self.l_turn += summon_turn.l_turn
 
     def attack(self):
