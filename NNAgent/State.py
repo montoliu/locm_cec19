@@ -45,7 +45,7 @@ class State:
 
     # ---------------------------------------
     # ---------------------------------------
-    def string_state(self):
+    def get_str(self):
         return self.str_info
 
     # ---------------------------------------
@@ -87,7 +87,7 @@ class State:
     # Return the string with state data for NN
     # ----------------------------------------------
     def to_str(self):
-        s = self.player1.data_string() + ',' + self.player2.data_string() + ","
+        s = self.player1.get_str() + ',' + self.player2.get_str() + ","
         s += self.print_cards_id(self.l_cards_on_player_hand, 8, "0") + ","
         s += self.print_cards_info(self.l_cards_on_left_lane_player, 3, "0,0,0,0,0,0,0,0") + ","
         s += self.print_cards_info(self.l_cards_on_right_lane_player, 3, "0,0,0,0,0,0,0,0") + ","
@@ -119,7 +119,7 @@ class State:
         s = ""
         i = 0
         for c in l_cards:
-            s += c.to_str()
+            s += c.get_str()
             i += 1
             if i < n_cards:
                 s += ","

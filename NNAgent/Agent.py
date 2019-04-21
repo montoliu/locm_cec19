@@ -100,9 +100,9 @@ class Agent:
     # Print to file the string to NN
     # ----------------------------------------------
     def print_NN(self):
-        string_to_print = self.last_state.string_state() + ','
-        string_to_print += self.state.string_state() + ','
-        string_to_print += str(self.last_summon_strategy) + ','
-        string_to_print += str(self.last_attack_strategy) + ','
-        string_to_print += str(self.reward())
-        return string_to_print
+        s = self.last_state.get_str() + ','
+        s += self.state.get_str() + ','
+        s += str(self.last_summon_strategy) + ','
+        s += str(self.last_attack_strategy) + ','
+        s += str(self.reward())
+        return s

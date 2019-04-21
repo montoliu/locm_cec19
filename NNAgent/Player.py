@@ -14,6 +14,6 @@ class Player:
     # ----------------------------------------------
     # Return the string with player data for NN
     # ----------------------------------------------
-    def data_string(self):
-        data_string = str(self.hp) + ',' + str(self.mana) + ',' + str(self.cards_remaining) + ',' + str(self.rune) + ',' + str(self.draw)
-        return data_string
+    def get_str(self):
+        s = str(self.hp) + ',' + str(self.mana) + ',' + str(self.cards_remaining) + ',' + str(self.rune) + ',' + str(self.draw)
+        return s

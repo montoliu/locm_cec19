@@ -4,109 +4,6 @@ import numpy as np
 
 
 # ------------------------------------------------------------
-# Agent
-# ------------------------------------------------------------
-class Agent:
-    def __init__(self):
-        self.state = None
-        self.last_state = None
-        self.draft = Draft()
-        self.summon_strategy = 0
-        self.last_summon_strategy = 0
-        self.attack_strategy = 0
-        self.last_attack_strategy = 0
-        self.LOCATION_IN_HAND = 0
-        self.LOCATION_PLAYER_SIDE = 1
-        self.LOCATION_OPPONENT_SIDE = -1
-
-        self.LANE_LEFT = 1
-        self.LANE_RIGHT = 0
-
-        self.TYPE_CREATURE = 0
-        self.TYPE_GREEN = 1
-        self.TYPE_RED = 2
-        self.TYPE_BLUE = 3
-
-    # ------------------------------------------------------------
-    # Read the input
-    # ------------------------------------------------------------
-    def read_input(self):
-        player_health1, player_mana1, player_deck1, player_rune1, player_draw1 = [int(j) for j in input().split()]
-        player_health2, player_mana2, player_deck2, player_rune2, player_draw2 = [int(j) for j in input().split()]
-
-        opponent_hand, opponent_actions = [int(i) for i in input().split()]
-        l_opponent_actions = []
-        for i in range(opponent_actions):
-            card_number_and_action = input()
-            l_opponent_actions.append(card_number_and_action)
-
-        card_count = int(input())
-        l_cards = []
-        for i in range(card_count):
-            card_number, instance_id, location, card_type, cost, attack, defense, abilities, my_health_change, opponent_health_change, card_draw, lane = input().split()
-            one_card = Card(int(card_number), int(instance_id), int(location), int(card_type), int(cost), int(attack),
-                                int(defense), abilities, (my_health_change), int(opponent_health_change), int(card_draw), int(lane))
-            l_cards.append(one_card)
-
-        player1 = Player(player_health1, player_mana1, player_deck1, player_rune1, player_draw1)
-        player2 = Player(player_health2, player_mana2, player_deck2, player_rune2, player_draw2)
-
-        self.last_state = copy.copy(self.state)
-        self.last_summon_strategy = self.summon_strategy
-        self.last_attack_strategy = self.attack_strategy
-
-        self.state = State(player1, player2, opponent_hand, l_opponent_actions, l_cards)
-
-    # ----------------------------------------------
-    # Select best action to do depending on the phase
-    # ----------------------------------------------
-    def act(self):
-        if self.state.is_draft_phase():
-            self.ia_draft()
-        else:
-            self.ia_battle()
-
-    # ----------------------------------------------
-    # IA for pick
-    # ----------------------------------------------
-    def ia_draft(self):
-        best_card = self.draft.pick_card(self.state.l_cards)
-        print("PICK " + str(best_card))
-
-    # ----------------------------------------------
-    # IA for battle
-    # ----------------------------------------------
-    def ia_battle(self):
-        self.summon_strategy = random.randint(1, 6)
-        self.attack_strategy = random.randint(1, 2)
-        turn = Turn(self.state, self.summon_strategy, self.attack_strategy)
-        if len(turn.l_turn) == 0:
-            print("PASS")
-        else:
-            turn_string = ""
-            for action in turn.l_turn:
-                turn_string += action
-            print(turn_string)
-
-    # ----------------------------------------------
-    #Calculate reward
-    # ----------------------------------------------
-    def reward(self):
-        return self.state.player1.hp - self.last_state.player1.hp + self.last_state.player2.hp - self.state.player2.hp
-
-    # ----------------------------------------------
-    # Print to file the string to NN
-    # ----------------------------------------------
-    def print_NN(self):
-        string_to_print = self.last_state.string_state() + ','
-        string_to_print += self.state.string_state() + ','
-        string_to_print += str(self.last_summon_strategy) + ','
-        string_to_print += str(self.last_attack_strategy) + ','
-        string_to_print += str(self.reward())
-        return string_to_print
-
-
-# ------------------------------------------------------------
 # Turn information
 # ------------------------------------------------------------
 class Turn:
@@ -152,199 +49,6 @@ class Turn:
         elif self.attack_strategy == 2:
             attack_turn = AttackCards(self.turn_state)
             self.l_turn += attack_turn.l_turn
-
-# ------------------------------------------------------------
-# Card information
-# ------------------------------------------------------------
-class Card:
-    def __init__(self, card_id, instance_id, location, card_type, cost, attack, defense, abilities, my_health_change, opponent_health_change, card_draw, lane):
-        self.card_id = card_id
-        self.instance_id = instance_id
-        self.location = location
-        self.card_type = card_type
-        self.cost = cost
-        self.attack = attack
-        self.defense = defense
-        self.abilities = abilities
-        self.my_health_change = my_health_change
-        self.opponent_health_change = opponent_health_change
-        self.card_draw = card_draw
-        self.lane = lane
-        self.breakthrough = False
-        self.charge = False
-        self.drain = False
-        self.guard = False
-        self.lethal = False
-        self.ward = False
-
-        for c in abilities:
-            if c == 'B':
-                self.breakthrough = True
-            elif c == 'C':
-                self.charge = True
-            elif c == 'D':
-                self.drain = True
-            elif c == 'G':
-                self.guard = True
-            elif c == 'L':
-                self.lethal = True
-            elif c == 'W':
-                self.ward = True
-
-    # ----------------------------------------------
-    # Return the string with cards on board data for NN
-    # ----------------------------------------------
-    def data_string(self):
-        data_string = str(self.attack) + ',' + str(self.defense)
-        for c in self.abilities:
-            data_string += ','
-            if c != '-':
-                data_string += "1"
-            else:
-                data_string += "0"
-        return data_string
-
-
-# ------------------------------------------------------------
-# Player information
-# ------------------------------------------------------------
-class Player:
-    def __init__(self, hp, mana, cards_remaining, rune, draw):
-        self.hp = hp
-        self.mana = mana
-        self.cards_remaining = cards_remaining  # the number of cards in the player's deck
-        self.rune = rune                        # the next remaining rune of a player
-        self.draw = draw                        # the additional number of drawn cards
-
-    # ----------------------------------------------
-    # Return the string with player data for NN
-    # ----------------------------------------------
-    def data_string(self):
-        data_string = str(self.hp) + ',' + str(self.mana) + ',' + str(self.cards_remaining) + ',' + str(self.rune) + ',' + str(self.draw)
-        return data_string
-
-
-# ------------------------------------------------------------
-# State information
-# ------------------------------------------------------------
-class State:
-    def __init__(self, player1, player2, opponent_hand, l_opponent_actions, l_cards):
-        self.player1 = player1
-        self.player2 = player2
-        self.opponent_hand = opponent_hand
-        self.l_opponent_actions = l_opponent_actions
-        self.l_cards = l_cards
-
-        self.LOCATION_IN_HAND = 0
-        self.LOCATION_PLAYER_SIDE = 1
-        self.LOCATION_OPPONENT_SIDE = -1
-
-        self.LANE_LEFT = 1
-        self.LANE_RIGHT = 0
-
-        self.TYPE_CREATURE = 0
-        self.TYPE_GREEN = 1
-        self.TYPE_RED = 2
-        self.TYPE_BLUE = 3
-
-        self.l_actions = []
-        self.l_cards_on_player_hand = []          # list of cards on player hand
-        self.l_guard_creatures_on_player_hand = []  # list of guard creatures on player hand
-        self.l_cards_on_left_lane_player = []     # list of cards on the left side of the player board
-        self.l_cards_on_left_lane_opponent = []   # list of cards on the left side of the opponent board
-        self.l_cards_on_right_lane_player = []    # list of cards on the right side of the player board
-        self.l_cards_on_right_lane_opponent = []  # list of cards on the right side of the opponent board
-        self.l_left_opponent_cards_guard = []     # list of cards on the right side of the opponent board
-        self.l_right_opponent_cards_guard = []    # list of cards on the right side of the opponent board
-        self.l_left_cards_can_attack = []
-        self.l_right_cards_can_attack = []
-
-        self.left_cover = False
-        self.right_cover = False
-
-        if not self.is_draft_phase():
-            self.classify_cards()
-
-        self.str_info = self.to_str()
-
-    # ---------------------------------------
-    # ---------------------------------------
-    def string_state(self):
-        return self.str_info
-
-    # ---------------------------------------
-    # Classify each card in the corresponding list (only if cost <= player mana)
-    # Can attack cards on the players lane (already summoned)
-    # Can be summoned criatures on the hand
-    # Can be used items on the hand
-    def classify_cards(self):
-        for c in self.l_cards:
-            if c.location == self.LOCATION_IN_HAND:
-                self.l_cards_on_player_hand.append(c)
-                if c.card_type == self.TYPE_CREATURE and c.guard:
-                    self.l_guard_creatures_on_player_hand.append(c)
-            elif c.location == self.LOCATION_PLAYER_SIDE and c.lane == self.LANE_LEFT:
-                self.l_cards_on_left_lane_player.append(c)
-                self.l_left_cards_can_attack.append(c)
-                if c.guard:
-                    self.left_cover = True
-            elif c.location == self.LOCATION_OPPONENT_SIDE and c.lane == self.LANE_LEFT:
-                self.l_cards_on_left_lane_opponent.append(c)
-                if c.guard:
-                    self.l_left_opponent_cards_guard.append(c)
-            elif c.location == self.LOCATION_PLAYER_SIDE and c.lane == self.LANE_RIGHT:
-                self.l_cards_on_right_lane_player.append(c)
-                self.l_right_cards_can_attack.append(c)
-                if c.guard:
-                    self.right_cover = True
-            elif c.location == self.LOCATION_OPPONENT_SIDE and c.lane == self.LANE_RIGHT:
-                self.l_cards_on_right_lane_opponent.append(c)
-                if c.guard:
-                    self.l_right_opponent_cards_guard.append(c)
-
-    # ---------------------------------------
-    # return true is the game is in the draft phase
-    def is_draft_phase(self):
-        return self.player1.mana == 0
-
-    # ----------------------------------------------
-    # Return the string with state data for NN
-    # ----------------------------------------------
-    def to_str(self):
-        all_string = self.player1.data_string() + ',' + self.player2.data_string()
-        i = 0
-        for c in self.l_cards_on_player_hand:
-            all_string += "," + str(c.card_id)
-            i += 1
-        for j in range(i+1, 9):
-            all_string += ",0"
-
-        for i in range(0, 3):
-            all_string += ','
-            if i < len(self.l_cards_on_left_lane_player):
-                all_string += self.l_cards_on_left_lane_player[i].data_string()
-            else:
-                all_string += '0,0,0,0,0,0,0,0'
-        for i in range(0, 3):
-            all_string += ','
-            if i < len(self.l_cards_on_right_lane_player):
-                all_string += self.l_cards_on_right_lane_player[i].data_string()
-            else:
-                all_string += '0,0,0,0,0,0,0,0'
-        for i in range(0, 3):
-            all_string += ','
-            if i < len(self.l_cards_on_left_lane_opponent):
-                all_string += self.l_cards_on_left_lane_opponent[i].data_string()
-            else:
-                all_string += '0,0,0,0,0,0,0,0'
-        for i in range(0, 3):
-            all_string += ','
-            if i < len(self.l_cards_on_right_lane_opponent):
-                all_string += self.l_cards_on_right_lane_opponent[i].data_string()
-            else:
-                all_string += '0,0,0,0,0,0,0,0'
-        return all_string
-
 
 
 # ------------------------------------------------------------
@@ -927,6 +631,312 @@ class AttackHead:
         else:
             self.l_turn.append("ATTACK " + str(c.instance_id) + " -1;")
         self.state.l_right_cards_can_attack.remove(c)
+
+
+# ------------------------------------------------------------
+# Player information
+# ------------------------------------------------------------
+class Player:
+    def __init__(self, hp, mana, cards_remaining, rune, draw):
+        self.hp = hp
+        self.mana = mana
+        self.cards_remaining = cards_remaining  # the number of cards in the player's deck
+        self.rune = rune                        # the next remaining rune of a player
+        self.draw = draw                        # the additional number of drawn cards
+
+    # ----------------------------------------------
+    # Return the string with player data for NN
+    # ----------------------------------------------
+    def get_str(self):
+        s = str(self.hp) + ',' + str(self.mana) + ',' + str(self.cards_remaining) + ',' + str(self.rune) + ',' + str(self.draw)
+        return s
+
+
+# ------------------------------------------------------------
+# Card information
+# ------------------------------------------------------------
+class Card:
+    def __init__(self, card_id, instance_id, location, card_type, cost, attack, defense, abilities, my_health_change, opponent_health_change, card_draw, lane):
+        self.card_id = card_id
+        self.instance_id = instance_id
+        self.location = location
+        self.card_type = card_type
+        self.cost = cost
+        self.attack = attack
+        self.defense = defense
+        self.abilities = abilities
+        self.my_health_change = my_health_change
+        self.opponent_health_change = opponent_health_change
+        self.card_draw = card_draw
+        self.lane = lane
+        self.breakthrough = False
+        self.charge = False
+        self.drain = False
+        self.guard = False
+        self.lethal = False
+        self.ward = False
+
+        for c in abilities:
+            if c == 'B':
+                self.breakthrough = True
+            elif c == 'C':
+                self.charge = True
+            elif c == 'D':
+                self.drain = True
+            elif c == 'G':
+                self.guard = True
+            elif c == 'L':
+                self.lethal = True
+            elif c == 'W':
+                self.ward = True
+
+    # ----------------------------------------------
+    # Return the string with cards on board data for NN
+    # ----------------------------------------------
+    def get_str(self):
+        s = str(self.attack) + ',' + str(self.defense)
+        for c in self.abilities:
+            s += ','
+            if c != '-':
+                s += "1"
+            else:
+                s += "0"
+        return s
+
+
+# ------------------------------------------------------------
+# State information
+# ------------------------------------------------------------
+class State:
+    def __init__(self, player1, player2, opponent_hand, l_opponent_actions, l_cards):
+        self.player1 = player1
+        self.player2 = player2
+        self.opponent_hand = opponent_hand
+        self.l_opponent_actions = l_opponent_actions
+        self.l_cards = l_cards
+
+        self.LOCATION_IN_HAND = 0
+        self.LOCATION_PLAYER_SIDE = 1
+        self.LOCATION_OPPONENT_SIDE = -1
+
+        self.LANE_LEFT = 1
+        self.LANE_RIGHT = 0
+
+        self.TYPE_CREATURE = 0
+        self.TYPE_GREEN = 1
+        self.TYPE_RED = 2
+        self.TYPE_BLUE = 3
+
+        self.l_actions = []
+        self.l_cards_on_player_hand = []          # list of cards on player hand
+        self.l_guard_creatures_on_player_hand = []  # list of guard creatures on player hand
+        self.l_cards_on_left_lane_player = []     # list of cards on the left side of the player board
+        self.l_cards_on_left_lane_opponent = []   # list of cards on the left side of the opponent board
+        self.l_cards_on_right_lane_player = []    # list of cards on the right side of the player board
+        self.l_cards_on_right_lane_opponent = []  # list of cards on the right side of the opponent board
+        self.l_left_opponent_cards_guard = []     # list of cards on the right side of the opponent board
+        self.l_right_opponent_cards_guard = []    # list of cards on the right side of the opponent board
+        self.l_left_cards_can_attack = []
+        self.l_right_cards_can_attack = []
+
+        self.left_cover = False
+        self.right_cover = False
+
+        if not self.is_draft_phase():
+            self.classify_cards()
+
+        self.str_info = self.to_str()
+
+    # ---------------------------------------
+    # ---------------------------------------
+    def get_str(self):
+        return self.str_info
+
+    # ---------------------------------------
+    # Classify each card in the corresponding list (only if cost <= player mana)
+    # Can attack cards on the players lane (already summoned)
+    # Can be summoned criatures on the hand
+    # Can be used items on the hand
+    def classify_cards(self):
+        for c in self.l_cards:
+            if c.location == self.LOCATION_IN_HAND:
+                self.l_cards_on_player_hand.append(c)
+                if c.card_type == self.TYPE_CREATURE and c.guard:
+                    self.l_guard_creatures_on_player_hand.append(c)
+            elif c.location == self.LOCATION_PLAYER_SIDE and c.lane == self.LANE_LEFT:
+                self.l_cards_on_left_lane_player.append(c)
+                self.l_left_cards_can_attack.append(c)
+                if c.guard:
+                    self.left_cover = True
+            elif c.location == self.LOCATION_OPPONENT_SIDE and c.lane == self.LANE_LEFT:
+                self.l_cards_on_left_lane_opponent.append(c)
+                if c.guard:
+                    self.l_left_opponent_cards_guard.append(c)
+            elif c.location == self.LOCATION_PLAYER_SIDE and c.lane == self.LANE_RIGHT:
+                self.l_cards_on_right_lane_player.append(c)
+                self.l_right_cards_can_attack.append(c)
+                if c.guard:
+                    self.right_cover = True
+            elif c.location == self.LOCATION_OPPONENT_SIDE and c.lane == self.LANE_RIGHT:
+                self.l_cards_on_right_lane_opponent.append(c)
+                if c.guard:
+                    self.l_right_opponent_cards_guard.append(c)
+
+    # ---------------------------------------
+    # return true is the game is in the draft phase
+    def is_draft_phase(self):
+        return self.player1.mana == 0
+
+    # ----------------------------------------------
+    # Return the string with state data for NN
+    # ----------------------------------------------
+    def to_str(self):
+        s = self.player1.get_str() + ',' + self.player2.get_str() + ","
+        s += self.print_cards_id(self.l_cards_on_player_hand, 8, "0") + ","
+        s += self.print_cards_info(self.l_cards_on_left_lane_player, 3, "0,0,0,0,0,0,0,0") + ","
+        s += self.print_cards_info(self.l_cards_on_right_lane_player, 3, "0,0,0,0,0,0,0,0") + ","
+        s += self.print_cards_info(self.l_cards_on_left_lane_opponent, 3, "0,0,0,0,0,0,0,0") + ","
+        s += self.print_cards_info(self.l_cards_on_right_lane_opponent, 3, "0,0,0,0,0,0,0,0")
+
+        return s
+
+    # ----------------------------------------------
+    # ----------------------------------------------
+    def print_cards_id(self, l_cards, n_cards, no_card):
+        s = ""
+        i = 0
+        for c in l_cards:
+            s += str(c.card_id)
+            i += 1
+            if i < n_cards:
+                s += ","
+
+        for j in range(i + 1, n_cards + 1):
+            s += no_card
+            if j < n_cards:
+                s += ","
+        return s
+
+    # ----------------------------------------------
+    # ----------------------------------------------
+    def print_cards_info(self, l_cards, n_cards, no_card):
+        s = ""
+        i = 0
+        for c in l_cards:
+            s += c.get_str()
+            i += 1
+            if i < n_cards:
+                s += ","
+
+        for j in range(i+1, n_cards+1):
+            s += no_card
+            if j < n_cards:
+                s += ","
+        return s
+
+
+# ------------------------------------------------------------
+# Agent
+# ------------------------------------------------------------
+class Agent:
+    def __init__(self):
+        self.state = None
+        self.last_state = None
+        self.draft = Draft()
+        self.summon_strategy = 0
+        self.last_summon_strategy = 0
+        self.attack_strategy = 0
+        self.last_attack_strategy = 0
+        self.LOCATION_IN_HAND = 0
+        self.LOCATION_PLAYER_SIDE = 1
+        self.LOCATION_OPPONENT_SIDE = -1
+
+        self.LANE_LEFT = 1
+        self.LANE_RIGHT = 0
+
+        self.TYPE_CREATURE = 0
+        self.TYPE_GREEN = 1
+        self.TYPE_RED = 2
+        self.TYPE_BLUE = 3
+
+    # ------------------------------------------------------------
+    # Read the input
+    # ------------------------------------------------------------
+    def read_input(self):
+        player_health1, player_mana1, player_deck1, player_rune1, player_draw1 = [int(j) for j in input().split()]
+        player_health2, player_mana2, player_deck2, player_rune2, player_draw2 = [int(j) for j in input().split()]
+
+        opponent_hand, opponent_actions = [int(i) for i in input().split()]
+        l_opponent_actions = []
+        for i in range(opponent_actions):
+            card_number_and_action = input()
+            l_opponent_actions.append(card_number_and_action)
+
+        card_count = int(input())
+        l_cards = []
+        for i in range(card_count):
+            card_number, instance_id, location, card_type, cost, attack, defense, abilities, my_health_change, opponent_health_change, card_draw, lane = input().split()
+            one_card = Card(int(card_number), int(instance_id), int(location), int(card_type), int(cost), int(attack),
+                                int(defense), abilities, (my_health_change), int(opponent_health_change), int(card_draw), int(lane))
+            l_cards.append(one_card)
+
+        player1 = Player(player_health1, player_mana1, player_deck1, player_rune1, player_draw1)
+        player2 = Player(player_health2, player_mana2, player_deck2, player_rune2, player_draw2)
+
+        self.last_state = copy.copy(self.state)
+        self.last_summon_strategy = self.summon_strategy
+        self.last_attack_strategy = self.attack_strategy
+
+        self.state = State(player1, player2, opponent_hand, l_opponent_actions, l_cards)
+
+    # ----------------------------------------------
+    # Select best action to do depending on the phase
+    # ----------------------------------------------
+    def act(self):
+        if self.state.is_draft_phase():
+            self.ia_draft()
+        else:
+            self.ia_battle()
+
+    # ----------------------------------------------
+    # IA for pick
+    # ----------------------------------------------
+    def ia_draft(self):
+        best_card = self.draft.pick_card(self.state.l_cards)
+        print("PICK " + str(best_card))
+
+    # ----------------------------------------------
+    # IA for battle
+    # ----------------------------------------------
+    def ia_battle(self):
+        self.summon_strategy = random.randint(1, 6)
+        self.attack_strategy = random.randint(1, 2)
+        turn = Turn(self.state, self.summon_strategy, self.attack_strategy)
+        if len(turn.l_turn) == 0:
+            print("PASS")
+        else:
+            turn_string = ""
+            for action in turn.l_turn:
+                turn_string += action
+            print(turn_string)
+
+    # ----------------------------------------------
+    #Calculate reward
+    # ----------------------------------------------
+    def reward(self):
+        return self.state.player1.hp - self.last_state.player1.hp + self.last_state.player2.hp - self.state.player2.hp
+
+    # ----------------------------------------------
+    # Print to file the string to NN
+    # ----------------------------------------------
+    def print_NN(self):
+        s = self.last_state.get_str() + ','
+        s += self.state.get_str() + ','
+        s += str(self.last_summon_strategy) + ','
+        s += str(self.last_attack_strategy) + ','
+        s += str(self.reward())
+        return s
+
 
 
 if __name__ == '__main__':
