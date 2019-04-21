@@ -41,6 +41,13 @@ class State:
         if not self.is_draft_phase():
             self.classify_cards()
 
+        self.str_info = self.to_str()
+
+    # ---------------------------------------
+    # ---------------------------------------
+    def string_state(self):
+        return self.str_info
+
     # ---------------------------------------
     # Classify each card in the corresponding list (only if cost <= player mana)
     # Can attack cards on the players lane (already summoned)
@@ -79,36 +86,46 @@ class State:
     # ----------------------------------------------
     # Return the string with state data for NN
     # ----------------------------------------------
-    def string_state(self):
-        all_string = self.player1.data_string() + ',' + self.player2.data_string()
-        for i in range(0, 8):
-            all_string += ','
-            if i < len(self.l_cards_on_player_hand):
-                all_string += str(self.l_cards_on_player_hand[i].card_id)
-            else:
-                all_string += '0'
-        for i in range(0, 3):
-            all_string += ','
-            if i < len(self.l_cards_on_left_lane_player):
-                all_string += self.l_cards_on_left_lane_player[i].data_string()
-            else:
-                all_string += '0,0,0,0,0,0,0,0'
-        for i in range(0, 3):
-            all_string += ','
-            if i < len(self.l_cards_on_right_lane_player):
-                all_string += self.l_cards_on_right_lane_player[i].data_string()
-            else:
-                all_string += '0,0,0,0,0,0,0,0'
-        for i in range(0, 3):
-            all_string += ','
-            if i < len(self.l_cards_on_left_lane_opponent):
-                all_string += self.l_cards_on_left_lane_opponent[i].data_string()
-            else:
-                all_string += '0,0,0,0,0,0,0,0'
-        for i in range(0, 3):
-            all_string += ','
-            if i < len(self.l_cards_on_right_lane_opponent):
-                all_string += self.l_cards_on_right_lane_opponent[i].data_string()
-            else:
-                all_string += '0,0,0,0,0,0,0,0'
-        return all_string
+    def to_str(self):
+        s = self.player1.data_string() + ',' + self.player2.data_string() + ","
+        s += self.print_cards_id(self.l_cards_on_player_hand, 8, "0") + ","
+        s += self.print_cards_info(self.l_cards_on_left_lane_player, 3, "0,0,0,0,0,0,0,0") + ","
+        s += self.print_cards_info(self.l_cards_on_right_lane_player, 3, "0,0,0,0,0,0,0,0") + ","
+        s += self.print_cards_info(self.l_cards_on_left_lane_opponent, 3, "0,0,0,0,0,0,0,0") + ","
+        s += self.print_cards_info(self.l_cards_on_right_lane_opponent, 3, "0,0,0,0,0,0,0,0")
+
+        return s
+
+    # ----------------------------------------------
+    # ----------------------------------------------
+    def print_cards_id(self, l_cards, n_cards, no_card):
+        s = ""
+        i = 0
+        for c in l_cards:
+            s += str(c.card_id)
+            i += 1
+            if i < n_cards:
+                s += ","
+
+        for j in range(i + 1, n_cards + 1):
+            s += no_card
+            if j < n_cards:
+                s += ","
+        return s
+
+    # ----------------------------------------------
+    # ----------------------------------------------
+    def print_cards_info(self, l_cards, n_cards, no_card):
+        s = ""
+        i = 0
+        for c in l_cards:
+            s += c.to_str()
+            i += 1
+            if i < n_cards:
+                s += ","
+
+        for j in range(i+1, n_cards+1):
+            s += no_card
+            if j < n_cards:
+                s += ","
+        return s

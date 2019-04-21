@@ -41,7 +41,7 @@ class Card:
     # ----------------------------------------------
     # Return the string with cards on board data for NN
     # ----------------------------------------------
-    def data_string(self):
+    def to_str(self):
         data_string = str(self.attack) + ',' + str(self.defense)
         for c in self.abilities:
             data_string += ','

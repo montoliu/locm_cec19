@@ -2,8 +2,6 @@ import random
 import copy
 import numpy as np
 
-import random
-import copy
 
 # ------------------------------------------------------------
 # Agent
@@ -13,8 +11,6 @@ class Agent:
         self.state = None
         self.last_state = None
         self.draft = Draft()
-        self.strategy = 0
-        self.last_strategy = 0
         self.summon_strategy = 0
         self.last_summon_strategy = 0
         self.attack_strategy = 0
@@ -54,7 +50,11 @@ class Agent:
 
         player1 = Player(player_health1, player_mana1, player_deck1, player_rune1, player_draw1)
         player2 = Player(player_health2, player_mana2, player_deck2, player_rune2, player_draw2)
+
         self.last_state = copy.copy(self.state)
+        self.last_summon_strategy = self.summon_strategy
+        self.last_attack_strategy = self.attack_strategy
+
         self.state = State(player1, player2, opponent_hand, l_opponent_actions, l_cards)
 
     # ----------------------------------------------
@@ -97,10 +97,11 @@ class Agent:
     # ----------------------------------------------
     # Print to file the string to NN
     # ----------------------------------------------
-    def print_NN(self, output_file):
+    def print_NN(self):
         string_to_print = self.last_state.string_state() + ','
         string_to_print += self.state.string_state() + ','
-        string_to_print += str(self.last_strategy) + ','
+        string_to_print += str(self.last_summon_strategy) + ','
+        string_to_print += str(self.last_attack_strategy) + ','
         string_to_print += str(self.reward())
         return string_to_print
 
@@ -223,8 +224,6 @@ class Player:
         return data_string
 
 
-
-
 # ------------------------------------------------------------
 # State information
 # ------------------------------------------------------------
@@ -266,6 +265,13 @@ class State:
         if not self.is_draft_phase():
             self.classify_cards()
 
+        self.str_info = self.to_str()
+
+    # ---------------------------------------
+    # ---------------------------------------
+    def string_state(self):
+        return self.str_info
+
     # ---------------------------------------
     # Classify each card in the corresponding list (only if cost <= player mana)
     # Can attack cards on the players lane (already summoned)
@@ -304,14 +310,15 @@ class State:
     # ----------------------------------------------
     # Return the string with state data for NN
     # ----------------------------------------------
-    def string_state(self):
+    def to_str(self):
         all_string = self.player1.data_string() + ',' + self.player2.data_string()
-        for i in range(0, 8):
-            all_string += ','
-            if i < len(self.l_cards_on_player_hand):
-                all_string += str(self.l_cards_on_player_hand[i].card_id)
-            else:
-                all_string += '0'
+        i = 0
+        for c in self.l_cards_on_player_hand:
+            all_string += "," + str(c.card_id)
+            i += 1
+        for j in range(i+1, 9):
+            all_string += ",0"
+
         for i in range(0, 3):
             all_string += ','
             if i < len(self.l_cards_on_left_lane_player):
@@ -337,6 +344,7 @@ class State:
             else:
                 all_string += '0,0,0,0,0,0,0,0'
         return all_string
+
 
 
 # ------------------------------------------------------------
@@ -477,7 +485,6 @@ class SummonRight:
         self.state.player1.mana -= c.cost
         self.state.l_cards_on_player_hand.remove(c)
 
-import random
 
 
 class SummonBalanced:
