@@ -13,8 +13,6 @@ class Agent:
         self.state = None
         self.last_state = None
         self.draft = dr.Draft()
-        self.strategy = 0
-        self.last_strategy = 0
         self.summon_strategy = 0
         self.last_summon_strategy = 0
         self.attack_strategy = 0
@@ -54,7 +52,11 @@ class Agent:
 
         player1 = pl.Player(player_health1, player_mana1, player_deck1, player_rune1, player_draw1)
         player2 = pl.Player(player_health2, player_mana2, player_deck2, player_rune2, player_draw2)
+
         self.last_state = copy.copy(self.state)
+        self.last_summon_strategy = self.summon_strategy
+        self.last_attack_strategy = self.attack_strategy
+
         self.state = st.State(player1, player2, opponent_hand, l_opponent_actions, l_cards)
 
     # ----------------------------------------------
@@ -77,7 +79,7 @@ class Agent:
     # IA for battle
     # ----------------------------------------------
     def ia_battle(self):
-        self.summon_strategy = 6#random.randint(1, 6)
+        self.summon_strategy = random.randint(1, 6)
         self.attack_strategy = random.randint(1, 2)
         turn = tr.Turn(self.state, self.summon_strategy, self.attack_strategy)
         if len(turn.l_turn) == 0:
@@ -100,6 +102,7 @@ class Agent:
     def print_NN(self):
         string_to_print = self.last_state.string_state() + ','
         string_to_print += self.state.string_state() + ','
-        string_to_print += str(self.last_strategy) + ','
+        string_to_print += str(self.last_summon_strategy) + ','
+        string_to_print += str(self.last_attack_strategy) + ','
         string_to_print += str(self.reward())
         return string_to_print
