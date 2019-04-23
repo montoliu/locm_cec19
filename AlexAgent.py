@@ -203,7 +203,6 @@ class State:
                 continue
             if c.card_type == self.TYPE_GREEN and len(self.l_cards_on_left_lane_player) == 0 and len(
                     self.l_cards_on_right_lane_player) == 0:
-                l_cards_can_summon_after.append(c)
                 continue
             if c.card_type == self.TYPE_RED and len(self.l_cards_on_left_lane_opponent) == 0 and len(
                     self.l_cards_on_right_lane_opponent) == 0:
@@ -435,7 +434,7 @@ class State:
 
     def attack_left(self, n):
         c = self.l_left_cards_can_attack[n]
-        if c.attack > 0 and c.lethal is not True:
+        if c.attack > 0 or c.lethal == True:
             #Si tiene cartas con G atacaremos a la primera carta de ese array
             if len(self.l_left_opponent_cards_guard) > 0:
                 if c.lethal is not True:
@@ -458,15 +457,17 @@ class State:
                     if self.l_left_opponent_cards_guard[0].defense <= 0:
                         self.l_cards_on_left_lane_opponent.remove(self.l_left_opponent_cards_guard[0])
                         self.l_cards_on_opponent_board.remove(self.l_left_opponent_cards_guard[0])
+                        if self.l_left_opponent_cards_guard[0].lethal or self.l_left_opponent_cards_guard[0].drain:
+                            self.l_left_opponent_cards_drain_lethal.remove(self.l_left_opponent_cards_guard[0])
                         self.l_left_opponent_cards_guard.remove(self.l_left_opponent_cards_guard[0])
                     if c.defense <= 0:
                         self.l_cards_on_left_lane_player.remove(c)
                         self.l_cards_on_player_board.remove(c)
             elif len(self.l_left_opponent_cards_drain_lethal) > 0:
                 if c.lethal is not True:
-                    self.l_right_opponent_cards_guard.sort(key=lambda x: x.defense, reverse=False)
+                    self.l_left_opponent_cards_drain_lethal.sort(key=lambda x: x.defense, reverse=False)
                 else:
-                    self.l_right_opponent_cards_guard.sort(key=lambda x: x.defense, reverse=True)
+                    self.l_left_opponent_cards_drain_lethal.sort(key=lambda x: x.defense, reverse=True)
                 if c.lethal is not True and len(self.l_left_cards_can_attack) > n+1 and self.l_left_cards_can_attack[n + 1].attack >= self.l_left_opponent_cards_drain_lethal[0].defense:
                     self.attack_left(n + 1)
                     return
@@ -481,6 +482,7 @@ class State:
                         self.l_left_opponent_cards_drain_lethal[0].defense -= c.attack
                     c.defense -= self.l_left_opponent_cards_drain_lethal[0].attack
                     if self.l_left_opponent_cards_drain_lethal[0].defense <= 0:
+                        self.l_cards_on_opponent_board.remove(self.l_left_opponent_cards_drain_lethal[0])
                         self.l_cards_on_left_lane_opponent.remove(self.l_left_opponent_cards_drain_lethal[0])
                         self.l_left_opponent_cards_drain_lethal.remove(self.l_left_opponent_cards_drain_lethal[0])
                     if c.defense <= 0:
@@ -494,7 +496,7 @@ class State:
 
     def attack_right(self, n):
         c = self.l_right_cards_can_attack[n]
-        if c.attack > 0 and c.lethal is not True:
+        if c.attack > 0 or c.lethal == True:
             # Si tiene cartas con G atacaremos a la primera carta de ese array
             if len(self.l_right_opponent_cards_guard) > 0:
                 if c.lethal is not True:
@@ -517,15 +519,18 @@ class State:
                     c.defense -= self.l_right_opponent_cards_guard[0].attack
                     if self.l_right_opponent_cards_guard[0].defense <= 0:
                         self.l_cards_on_right_lane_opponent.remove(self.l_right_opponent_cards_guard[0])
+                        self.l_cards_on_opponent_board.remove(self.l_right_opponent_cards_guard[0])
+                        if self.l_right_opponent_cards_guard[0].lethal or self.l_right_opponent_cards_guard[0].drain:
+                            self.l_right_opponent_cards_drain_lethal.remove(self.l_right_opponent_cards_guard[0])
                         self.l_right_opponent_cards_guard.remove(self.l_right_opponent_cards_guard[0])
                     if c.defense <= 0:
                         self.l_cards_on_right_lane_player.remove(c)
                         self.l_cards_on_player_board.remove(c)
             elif len(self.l_right_opponent_cards_drain_lethal) > 0:
                 if c.lethal is not True:
-                    self.l_right_opponent_cards_guard.sort(key=lambda x: x.defense, reverse=False)
+                    self.l_right_opponent_cards_drain_lethal.sort(key=lambda x: x.defense, reverse=False)
                 else:
-                    self.l_right_opponent_cards_guard.sort(key=lambda x: x.defense, reverse=True)
+                    self.l_right_opponent_cards_drain_lethal.sort(key=lambda x: x.defense, reverse=True)
                 if c.lethal is not True and len(self.l_right_cards_can_attack) > n+1 and self.l_right_cards_can_attack[n + 1].attack >= self.l_right_opponent_cards_drain_lethal[0].defense:
                     self.attack_right(n + 1)
                     return
@@ -540,6 +545,7 @@ class State:
                         self.l_right_opponent_cards_drain_lethal[0].defense -= c.attack
                     c.defense -= self.l_right_opponent_cards_drain_lethal[0].attack
                     if self.l_right_opponent_cards_drain_lethal[0].defense <= 0:
+                        self.l_cards_on_opponent_board.remove(self.l_right_opponent_cards_drain_lethal[0])
                         self.l_cards_on_right_lane_opponent.remove(self.l_right_opponent_cards_drain_lethal[0])
                         self.l_right_opponent_cards_drain_lethal.remove(self.l_right_opponent_cards_drain_lethal[0])
                     if c.defense <= 0:
