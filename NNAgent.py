@@ -16,31 +16,172 @@ class Turn:
         self.create_turn()
 
     def create_turn(self):
-        self.use_mana()
+        self.use_mana(self.summon_strategy)
         self.attack()
-        if len(self.turn_state.l_cards_on_player_hand) > 0:
-            self.use_mana()
+        if len(self.turn_state.l_cards_on_player_hand) + len(self.turn_state.l_green_objects_on_player_hand) + len(
+                self.turn_state.l_blue_objects_on_player_hand) + len(self.turn_state.l_red_objects_on_player_hand) > 0:
+            self.use_mana(self.summon_strategy)
             self.attack()
 
-    def use_mana(self):
-        if self.summon_strategy == 1:
+    def use_mana(self, strategy):
+        if strategy == 1:
+            # Summon two lanes balanced
             summon_turn = SummonBalanced(self.turn_state)
             self.l_turn += summon_turn.l_turn
-        elif self.summon_strategy == 2:
+        elif strategy == 2:
+            # Summon only left
             summon_turn = SummonLeft(self.turn_state)
             self.l_turn += summon_turn.l_turn
-        elif self.summon_strategy == 3:
+        elif strategy == 3:
+            # Summon only right
             summon_turn = SummonRight(self.turn_state)
             self.l_turn += summon_turn.l_turn
-        elif self.summon_strategy == 4:
-            summon_turn = SummonCoverOrBalanced(self.turn_state)
+        elif strategy == 4:
+            # Summon trying cover two lanes with guard and after summon two lanes balanced
+            # summon_turn = scb.SummonCoverOrBalanced(self.turn_state)
+            summon_turn = CoverLanes(self.turn_state)
             self.l_turn += summon_turn.l_turn
-        elif self.summon_strategy == 5:
-            summon_turn = SummonCoverOrLeft(self.turn_state)
+            self.use_mana(1)
+        elif strategy == 5:
+            # Summon trying cover two lanes with guard and after summon only left
+            # summon_turn = scl.SummonCoverOrLeft(self.turn_state)
+            summon_turn = CoverLanes(self.turn_state)
             self.l_turn += summon_turn.l_turn
-        elif self.summon_strategy == 6:
-            summon_turn = SummonCoverOrRight(self.turn_state)
+            self.use_mana(2)
+        elif strategy == 6:
+            # Summon trying cover two lanes with guard and after summon only right
+            # summon_turn = scr.SummonCoverOrRight(self.turn_state)
+            summon_turn = CoverLanes(self.turn_state)
             self.l_turn += summon_turn.l_turn
+            self.use_mana(3)
+        elif strategy == 7:
+            # Summon two lanes balanced with cost <
+            self.turn_state.l_cards_on_player_hand.sort(key=lambda x: x.cost, reverse=False)
+            self.use_mana(1)
+        elif strategy == 8:
+            # Summon two lanes balanced with cost >
+            self.turn_state.l_cards_on_player_hand.sort(key=lambda x: x.cost, reverse=True)
+            self.use_mana(1)
+        elif strategy == 9:
+            # Summon only left with cost <
+            self.turn_state.l_cards_on_player_hand.sort(key=lambda x: x.cost, reverse=False)
+            self.use_mana(2)
+        elif strategy == 10:
+            # Summon only left with cost >
+            self.turn_state.l_cards_on_player_hand.sort(key=lambda x: x.cost, reverse=True)
+            self.use_mana(2)
+        elif strategy == 11:
+            # Summon only right with cost <
+            self.turn_state.l_cards_on_player_hand.sort(key=lambda x: x.cost, reverse=False)
+            self.use_mana(3)
+        elif strategy == 12:
+            # Summon only right with cost >
+            self.turn_state.l_cards_on_player_hand.sort(key=lambda x: x.cost, reverse=True)
+            self.use_mana(3)
+        elif strategy == 13:
+            # Summon trying cover two lanes with guard and after summon two lanes balanced with cost <
+            # summon_turn = scb.SummonCoverOrBalanced(self.turn_state)
+            self.turn_state.l_cards_on_player_hand.sort(key=lambda x: x.cost, reverse=False)
+            self.turn_state.l_guard_creatures_on_player_hand.sort(key=lambda x: x.cost, reverse=False)
+            self.use_mana(4)
+        elif strategy == 14:
+            # Summon trying cover two lanes with guard and after summon two lanes balanced with cost >
+            # summon_turn = scb.SummonCoverOrBalanced(self.turn_state)
+            self.turn_state.l_cards_on_player_hand.sort(key=lambda x: x.cost, reverse=True)
+            self.turn_state.l_guard_creatures_on_player_hand.sort(key=lambda x: x.cost, reverse=True)
+            self.use_mana(4)
+        elif strategy == 15:
+            # Summon trying cover two lanes with guard and after summon only left with cost <
+            self.turn_state.l_cards_on_player_hand.sort(key=lambda x: x.cost, reverse=False)
+            self.turn_state.l_guard_creatures_on_player_hand.sort(key=lambda x: x.cost, reverse=False)
+            self.use_mana(5)
+        elif strategy == 16:
+            # Summon trying cover two lanes with guard and after summon only left with cost >
+            self.turn_state.l_cards_on_player_hand.sort(key=lambda x: x.cost, reverse=True)
+            self.turn_state.l_guard_creatures_on_player_hand.sort(key=lambda x: x.cost, reverse=True)
+            self.use_mana(5)
+        elif strategy == 17:
+            # Summon trying cover two lanes with guard and after summon only right with cost <
+            self.turn_state.l_cards_on_player_hand.sort(key=lambda x: x.cost, reverse=False)
+            self.turn_state.l_guard_creatures_on_player_hand.sort(key=lambda x: x.cost, reverse=False)
+            self.use_mana(6)
+        elif strategy == 18:
+            # Summon trying cover two lanes with guard and after summon only right with cost >
+            self.turn_state.l_cards_on_player_hand.sort(key=lambda x: x.cost, reverse=True)
+            self.turn_state.l_guard_creatures_on_player_hand.sort(key=lambda x: x.cost, reverse=True)
+            self.use_mana(6)
+        elif strategy == 19:
+            # Only use green objects
+            summon_turn = UseGreen(self.turn_state)
+            self.l_turn += summon_turn.l_turn
+        elif strategy == 20:
+            # Only use red objects
+            summon_turn = UseRed(self.turn_state)
+            self.l_turn += summon_turn.l_turn
+        elif strategy == 21:
+            # Only use blue objects
+            summon_turn = UseBlue(self.turn_state)
+            self.l_turn += summon_turn.l_turn
+        elif strategy == 22:
+            # Only use green and red objects
+            self.use_mana(19)
+            self.use_mana(20)
+        elif strategy == 23:
+            # Only use green and blue objects
+            self.use_mana(19)
+            self.use_mana(21)
+        elif strategy == 24:
+            # Only use red and green objects
+            self.use_mana(20)
+            self.use_mana(19)
+        elif strategy == 25:
+            # Only use blue and green objects
+            self.use_mana(21)
+            self.use_mana(19)
+        elif strategy == 26:
+            # Only use blue and red objects
+            self.use_mana(21)
+            self.use_mana(20)
+        elif strategy == 27:
+            # Only use red and blue objects
+            self.use_mana(20)
+            self.use_mana(21)
+        elif strategy == 28:
+            # Only use green, red and blue objects
+            self.use_mana(19)
+            self.use_mana(27)
+        elif strategy == 29:
+            # Only use green, blue and red objects
+            self.use_mana(19)
+            self.use_mana(26)
+        elif strategy == 30:
+            # Only use red, green and blue objects
+            self.use_mana(20)
+            self.use_mana(23)
+        elif strategy == 31:
+            # Only use red, blue and green objects
+            self.use_mana(20)
+            self.use_mana(25)
+        elif strategy == 32:
+            # Only use blue, green and red objects
+            self.use_mana(21)
+            self.use_mana(22)
+        elif strategy == 33:
+            # Only use blue, red and green objects
+            self.use_mana(21)
+            self.use_mana(24)
+        elif strategy == 33:
+            # Summon left and after summon right
+            self.use_mana(2)
+            self.use_mana(3)
+        elif strategy == 33:
+            # Summon right and after summon left
+            self.use_mana(3)
+            self.use_mana(2)
+        elif strategy == 33:
+            # use abjects G-R-B and cover/balanced cost <
+            self.use_mana(28)
+            self.use_mana(7)
 
     def attack(self):
         if self.attack_strategy == 1:
@@ -123,6 +264,65 @@ class Draft:
                 n = 2
         return n
 
+
+# ------------------------------------------------------------
+# Summon strategies class
+# ------------------------------------------------------------
+# ------------------------------------------------------------
+# Cover two lanes with guard
+# ------------------------------------------------------------
+class CoverLanes:
+    def __init__(self, state):
+
+        self.state = state
+        self.l_turn = []
+        self.get_turn()
+
+    def get_turn(self):
+        if self.state.left_cover is not True and len(self.state.l_cards_on_left_lane_player) < 3:
+            self.cover_left()
+        if self.state.right_cover is not True and len(self.state.l_cards_on_right_lane_player) < 3:
+            self.cover_right()
+        return self.l_turn
+
+    def cover_left(self):
+        while len(self.state.l_guard_creatures_on_player_hand) > 0:
+            c = self.state.l_guard_creatures_on_player_hand[0]
+            if c.cost > self.state.player1.mana:
+                self.state.l_guard_creatures_on_player_hand.remove(c)
+                continue
+            else:
+                self.l_turn.append("SUMMON " + str(c.instance_id) + " " + str(self.state.LANE_LEFT) + ";")
+                if c.charge:
+                    self.state.l_left_cards_can_attack.append(c)
+            self.state.l_cards_on_left_lane_player.append(c)
+            self.state.player1.mana -= c.cost
+            self.state.l_guard_creatures_on_player_hand.remove(c)
+            self.state.l_cards_on_player_hand.remove(c)
+            self.state.left_cover = True
+            return
+
+    def cover_right(self):
+        while len(self.state.l_guard_creatures_on_player_hand) > 0:
+            c = self.state.l_guard_creatures_on_player_hand[0]
+            if c.cost > self.state.player1.mana:
+                self.state.l_guard_creatures_on_player_hand.remove(c)
+                continue
+            else:
+                self.l_turn.append("SUMMON " + str(c.instance_id) + " " + str(self.state.LANE_RIGHT) + ";")
+                if c.charge:
+                    self.state.l_right_cards_can_attack.append(c)
+            self.state.l_cards_on_right_lane_player.append(c)
+            self.state.player1.mana -= c.cost
+            self.state.l_guard_creatures_on_player_hand.remove(c)
+            self.state.l_cards_on_player_hand.remove(c)
+            self.state.right_cover = True
+            return
+
+
+# ------------------------------------------------------------
+# Summon all left
+# ------------------------------------------------------------
 class SummonLeft:
     def __init__(self, state):
 
@@ -155,6 +355,10 @@ class SummonLeft:
         self.state.player1.mana -= c.cost
         self.state.l_cards_on_player_hand.remove(c)
 
+
+# ------------------------------------------------------------
+# Summon all right
+# ------------------------------------------------------------
 class SummonRight:
     def __init__(self, state):
 
@@ -179,18 +383,20 @@ class SummonRight:
                 self.state.l_cards_on_player_hand.remove(c)
         self.state.l_cards_on_player_hand = l_cards_can_summon_after
 
-    def summon(self,c):
+    def summon(self, c):
         self.l_turn.append("SUMMON " + str(c.instance_id) + " " + str(self.state.LANE_RIGHT) + ";")
         if c.charge:
             self.state.l_right_cards_can_attack.append(c)
-        #if c.guard:
+        # if c.guard:
         #    self.left_cover = True
         self.state.l_cards_on_right_lane_player.append(c)
         self.state.player1.mana -= c.cost
         self.state.l_cards_on_player_hand.remove(c)
 
 
-
+# ------------------------------------------------------------
+# Summon balanced
+# ------------------------------------------------------------
 class SummonBalanced:
     def __init__(self, state):
 
@@ -205,7 +411,8 @@ class SummonBalanced:
             if c.cost > self.state.player1.mana:
                 self.state.l_cards_on_player_hand.remove(c)
                 continue
-            if c.card_type == self.state.TYPE_CREATURE and len(self.state.l_cards_on_left_lane_player) >= 3 and len(self.state.l_cards_on_right_lane_player) >= 3:
+            if c.card_type == self.state.TYPE_CREATURE and len(self.state.l_cards_on_left_lane_player) >= 3 and len(
+                    self.state.l_cards_on_right_lane_player) >= 3:
                 l_cards_can_summon_after.append(c)
                 self.state.l_cards_on_player_hand.remove(c)
                 continue
@@ -215,7 +422,7 @@ class SummonBalanced:
                 self.state.l_cards_on_player_hand.remove(c)
         self.state.l_cards_on_player_hand = l_cards_can_summon_after
 
-    def summon(self,c):
+    def summon(self, c):
         if len(self.state.l_cards_on_left_lane_player) < len(self.state.l_cards_on_right_lane_player):
             self.summon_left(c)
         elif len(self.state.l_cards_on_left_lane_player) > len(self.state.l_cards_on_right_lane_player):
@@ -229,7 +436,7 @@ class SummonBalanced:
         self.state.player1.mana -= c.cost
         self.state.l_cards_on_player_hand.remove(c)
 
-    def summon_right(self,c):
+    def summon_right(self, c):
         self.l_turn.append("SUMMON " + str(c.instance_id) + " " + str(self.state.LANE_RIGHT) + ";")
         if c.charge:
             self.state.l_right_cards_can_attack.append(c)
@@ -237,7 +444,7 @@ class SummonBalanced:
         #    self.left_cover = True
         self.state.l_cards_on_right_lane_player.append(c)
 
-    def summon_left(self,c):
+    def summon_left(self, c):
         self.l_turn.append("SUMMON " + str(c.instance_id) + " " + str(self.state.LANE_LEFT) + ";")
         if c.charge:
             self.state.l_left_cards_can_attack.append(c)
@@ -246,6 +453,9 @@ class SummonBalanced:
         self.state.l_cards_on_left_lane_player.append(c)
 
 
+# ------------------------------------------------------------
+# Summon all balanced trying cover two lanes with guard
+# ------------------------------------------------------------
 class SummonCoverOrBalanced:
     def __init__(self, state):
 
@@ -264,7 +474,8 @@ class SummonCoverOrBalanced:
             if c.cost > self.state.player1.mana:
                 self.state.l_cards_on_player_hand.remove(c)
                 continue
-            if c.card_type == self.state.TYPE_CREATURE and len(self.state.l_cards_on_left_lane_player) >= 3 and len(self.state.l_cards_on_right_lane_player) >= 3:
+            if c.card_type == self.state.TYPE_CREATURE and len(self.state.l_cards_on_left_lane_player) >= 3 and len(
+                    self.state.l_cards_on_right_lane_player) >= 3:
                 l_cards_can_summon_after.append(c)
                 self.state.l_cards_on_player_hand.remove(c)
                 continue
@@ -339,6 +550,9 @@ class SummonCoverOrBalanced:
             return
 
 
+# ------------------------------------------------------------
+# Summon all left trying cover two lanes with guard
+# ------------------------------------------------------------
 class SummonCoverOrLeft:
     def __init__(self, state):
 
@@ -410,7 +624,9 @@ class SummonCoverOrLeft:
             return
 
 
-
+# ------------------------------------------------------------
+# Summon all Right trying cover two lanes with guard
+# ------------------------------------------------------------
 class SummonCoverOrRight:
     def __init__(self, state):
 
@@ -484,6 +700,184 @@ class SummonCoverOrRight:
             return
 
 
+# ------------------------------------------------------------
+# Use green objects
+# ------------------------------------------------------------
+class UseBlue:
+    def __init__(self, state):
+
+        self.state = state
+        self.l_turn = []
+        self.get_turn()
+
+    def get_turn(self):
+        l_cards_can_summon_after = []
+        while len(self.state.l_blue_objects_on_player_hand) > 0:
+            c = self.state.l_blue_objects_on_player_hand[0]
+            if c.cost > self.state.player1.mana:
+                self.state.l_blue_objects_on_player_hand.remove(c)
+                continue
+            else:
+                self.use(c)
+        self.state.l_blue_objects_on_player_hand = l_cards_can_summon_after
+
+    def use(self, c):
+        if c.defense < 0 and len(self.state.l_cards_on_opponent_board) > 0:
+            best_difference = 30
+            c_attack = self.state.l_cards_on_opponent_board[0]
+            for enemyCard in self.state.l_cards_on_opponent_board:
+                diference = abs(enemyCard.defense + c.defense)
+                if diference == 0:
+                    c_attack = enemyCard
+                    break
+                elif diference < best_difference:
+                    best_difference = diference
+                    c_attack = enemyCard
+            self.l_turn.append("USE " + str(c.instance_id) + " " + str(c_attack.instance_id) + ";")
+            c_attack.defense -= c.defense
+            if c_attack.defense <= 0:
+                if c_attack.lane == self.state.LANE_LEFT:
+                    self.state.l_cards_on_left_lane_opponent.remove(c_attack)
+                    if c_attack in self.state.l_left_opponent_cards_guard:
+                        self.state.l_left_opponent_cards_guard.remove(c_attack)
+                else:
+                    self.state.l_cards_on_right_lane_opponent.remove(c_attack)
+                    if c_attack in self.state.l_right_opponent_cards_guard:
+                        self.state.l_right_opponent_cards_guard.remove(c_attack)
+                self.state.l_cards_on_opponent_board.remove(c_attack)
+        else:
+            self.l_turn.append("USE " + str(c.instance_id) + " -1;")
+        self.state.player1.mana -= c.cost
+        self.state.l_blue_objects_on_player_hand.remove(c)
+        self.state.l_cards_on_player_hand.remove(c)
+
+
+# ------------------------------------------------------------
+# Use green objects
+# ------------------------------------------------------------
+class UseGreen:
+    def __init__(self, state):
+
+        self.state = state
+        self.l_turn = []
+        self.get_turn()
+
+    def get_turn(self):
+        l_cards_can_summon_after = []
+        while len(self.state.l_green_objects_on_player_hand) > 0:
+            c = self.state.l_green_objects_on_player_hand[0]
+            if c.cost > self.state.player1.mana:
+                self.state.l_cards_on_player_hand.remove(c)
+                continue
+            if len(self.state.l_cards_on_player_board) == 0:
+                l_cards_can_summon_after.append(c)
+                self.state.l_green_objects_on_player_hand.remove(c)
+                continue
+            else:
+                self.use(c)
+        self.state.l_green_objects_on_player_hand = l_cards_can_summon_after
+
+    def use(self, c):
+        self.state.l_cards_on_player_board.sort(key=lambda x: x.cost, reverse=True)
+        self.l_turn.append(
+            "USE " + str(c.instance_id) + " " + str(self.state.l_cards_on_player_board[0].instance_id) + ";")
+        self.state.player1.mana -= c.cost
+        self.state.l_green_objects_on_player_hand.remove(c)
+        self.state.l_cards_on_player_hand.remove(c)
+
+
+# ------------------------------------------------------------
+# Use Red Objects
+# ------------------------------------------------------------
+class UseRed:
+    def __init__(self, state):
+
+        self.state = state
+        self.l_turn = []
+        self.get_turn()
+
+    def get_turn(self):
+        l_cards_can_summon_after = []
+        while len(self.state.l_red_objects_on_player_hand) > 0:
+            c = self.state.l_red_objects_on_player_hand[0]
+            if c.cost > self.state.player1.mana:
+                self.state.l_red_objects_on_player_hand.remove(c)
+                continue
+            if len(self.state.l_cards_on_opponent_board) == 0:
+                l_cards_can_summon_after.append(c)
+                self.state.l_red_objects_on_player_hand.remove(c)
+                continue
+            else:
+                self.use(c)
+        self.state.l_red_objects_on_player_hand = l_cards_can_summon_after
+
+    def use(self, c):
+        best_coincidences = 0
+        best_coincidence_card = self.state.l_cards_on_opponent_board[0]
+        for enemyCard in self.state.l_cards_on_opponent_board:
+            coincidences = 0
+            if enemyCard.breakthrough and c.breakthrough:
+                coincidences += 1
+            if enemyCard.charge and c.charge:
+                coincidences += 1
+            if enemyCard.drain and c.drain:
+                coincidences += 1
+            if enemyCard.guard and c.guard:
+                coincidences += 1
+            if enemyCard.lethal and c.lethal:
+                coincidences += 1
+            if enemyCard.ward and c.ward:
+                coincidences += 1
+            if coincidences > best_coincidences:
+                best_coincidences = coincidences
+                best_coincidence_card = enemyCard
+
+        if best_coincidences > 0:
+            self.l_turn.append("USE " + str(c.instance_id) + " " + str(best_coincidence_card.instance_id) + ";")
+            best_coincidence_card.defense += c.defense
+            if best_coincidence_card.defense <= 0:
+                if best_coincidence_card.lane == self.state.LANE_LEFT:
+                    self.state.l_cards_on_left_lane_opponent.remove(best_coincidence_card)
+                    if best_coincidence_card in self.state.l_left_opponent_cards_guard:
+                        self.state.l_left_opponent_cards_guard.remove(best_coincidence_card)
+                else:
+                    self.state.l_cards_on_right_lane_opponent.remove(best_coincidence_card)
+                    if best_coincidence_card in self.state.l_right_opponent_cards_guard:
+                        self.state.l_right_opponent_cards_guard.remove(best_coincidence_card)
+                self.state.l_cards_on_opponent_board.remove(best_coincidence_card)
+
+        best_difference = 100
+        c_attack = self.state.l_cards_on_opponent_board[0]
+        for enemyCard in self.state.l_cards_on_opponent_board:
+            diference = abs(enemyCard.defense + c.defense)
+            if diference == 0:
+                c_attack = enemyCard
+                break
+            elif diference < best_difference:
+                best_difference = diference
+                c_attack = enemyCard
+        self.l_turn.append("USE " + str(c.instance_id) + " " + str(c_attack.instance_id) + ";")
+        c_attack.defense -= c.defense
+        if c_attack.defense <= 0:
+            if c_attack.lane == self.state.LANE_LEFT:
+                self.state.l_cards_on_left_lane_opponent.remove(c_attack)
+                if c_attack in self.state.l_left_opponent_cards_guard:
+                    self.state.l_left_opponent_cards_guard.remove(c_attack)
+            else:
+                self.state.l_cards_on_right_lane_opponent.remove(c_attack)
+                if c_attack in self.state.l_right_opponent_cards_guard:
+                    self.state.l_right_opponent_cards_guard.remove(c_attack)
+            self.state.l_cards_on_opponent_board.remove(c_attack)
+        self.state.l_red_objects_on_player_hand.mana -= c.cost
+        self.state.l_cards_on_player_hand.remove(c)
+
+
+# ------------------------------------------------------------
+# Attack strategies class
+# ------------------------------------------------------------
+# ------------------------------------------------------------
+# Destroy all cards before attack head
+# ------------------------------------------------------------
 class AttackCards:
     def __init__(self, state):
 
@@ -579,6 +973,10 @@ class AttackCards:
         if c.defense <= 0:
             self.state.l_cards_on_right_lane_player.remove(c)
 
+
+# ------------------------------------------------------------
+# Attack head if you can
+# ------------------------------------------------------------
 class AttackHead:
     def __init__(self, state):
 
@@ -595,7 +993,8 @@ class AttackHead:
     def attack_left(self, n):
         c = self.state.l_left_cards_can_attack[n]
         if len(self.state.l_left_opponent_cards_guard) > 0:
-            self.l_turn.append("ATTACK " + str(c.instance_id) + " " + str(self.state.l_left_opponent_cards_guard[0].instance_id) + ";")
+            self.l_turn.append(
+                "ATTACK " + str(c.instance_id) + " " + str(self.state.l_left_opponent_cards_guard[0].instance_id) + ";")
             if self.state.l_left_opponent_cards_guard[0].ward:
                 self.state.l_left_opponent_cards_guard[0].ward = False
             elif c.lethal:
@@ -615,7 +1014,8 @@ class AttackHead:
     def attack_right(self, n):
         c = self.state.l_right_cards_can_attack[n]
         if len(self.state.l_right_opponent_cards_guard) > 0:
-            self.l_turn.append("ATTACK " + str(c.instance_id) + " " + str(self.state.l_right_opponent_cards_guard[0].instance_id) + ";")
+            self.l_turn.append("ATTACK " + str(c.instance_id) + " " + str(
+                self.state.l_right_opponent_cards_guard[0].instance_id) + ";")
             if self.state.l_right_opponent_cards_guard[0].ward:
                 self.state.l_right_opponent_cards_guard[0].ward = False
             elif c.lethal:
@@ -641,14 +1041,15 @@ class Player:
         self.hp = hp
         self.mana = mana
         self.cards_remaining = cards_remaining  # the number of cards in the player's deck
-        self.rune = rune                        # the next remaining rune of a player
-        self.draw = draw                        # the additional number of drawn cards
+        self.rune = rune  # the next remaining rune of a player
+        self.draw = draw  # the additional number of drawn cards
 
     # ----------------------------------------------
     # Return the string with player data for NN
     # ----------------------------------------------
     def get_str(self):
-        s = str(self.hp) + ',' + str(self.mana) + ',' + str(self.cards_remaining) + ',' + str(self.rune) + ',' + str(self.draw)
+        s = str(self.hp) + ',' + str(self.mana) + ',' + str(self.cards_remaining) + ',' + str(self.rune) + ',' + str(
+            self.draw)
         return s
 
 
@@ -656,7 +1057,8 @@ class Player:
 # Card information
 # ------------------------------------------------------------
 class Card:
-    def __init__(self, card_id, instance_id, location, card_type, cost, attack, defense, abilities, my_health_change, opponent_health_change, card_draw, lane):
+    def __init__(self, card_id, instance_id, location, card_type, cost, attack, defense, abilities, my_health_change,
+                 opponent_health_change, card_draw, lane):
         self.card_id = card_id
         self.instance_id = instance_id
         self.location = location
@@ -728,14 +1130,17 @@ class State:
         self.TYPE_BLUE = 3
 
         self.l_actions = []
-        self.l_cards_on_player_hand = []          # list of cards on player hand
+        self.l_cards_on_player_hand = []  # list of cards on player hand
         self.l_guard_creatures_on_player_hand = []  # list of guard creatures on player hand
-        self.l_cards_on_left_lane_player = []     # list of cards on the left side of the player board
-        self.l_cards_on_left_lane_opponent = []   # list of cards on the left side of the opponent board
-        self.l_cards_on_right_lane_player = []    # list of cards on the right side of the player board
+        self.l_green_objects_on_player_hand = []  # list of green objects on player hand
+        self.l_blue_objects_on_player_hand = []  # list of blue objects on player hand
+        self.l_red_objects_on_player_hand = []  # list of red objects on player hand
+        self.l_cards_on_left_lane_player = []  # list of cards on the left side of the player board
+        self.l_cards_on_left_lane_opponent = []  # list of cards on the left side of the opponent board
+        self.l_cards_on_right_lane_player = []  # list of cards on the right side of the player board
         self.l_cards_on_right_lane_opponent = []  # list of cards on the right side of the opponent board
-        self.l_left_opponent_cards_guard = []     # list of cards on the right side of the opponent board
-        self.l_right_opponent_cards_guard = []    # list of cards on the right side of the opponent board
+        self.l_left_opponent_cards_guard = []  # list of cards on the right side of the opponent board
+        self.l_right_opponent_cards_guard = []  # list of cards on the right side of the opponent board
         self.l_left_cards_can_attack = []
         self.l_right_cards_can_attack = []
 
@@ -763,6 +1168,12 @@ class State:
                 self.l_cards_on_player_hand.append(c)
                 if c.card_type == self.TYPE_CREATURE and c.guard:
                     self.l_guard_creatures_on_player_hand.append(c)
+                if c.card_type == self.TYPE_GREEN:
+                    self.l_green_objects_on_player_hand.append(c)
+                elif c.card_type == self.TYPE_BLUE:
+                    self.l_blue_objects_on_player_hand.append(c)
+                elif c.card_type == self.TYPE_RED:
+                    self.l_red_objects_on_player_hand.append(c)
             elif c.location == self.LOCATION_PLAYER_SIDE and c.lane == self.LANE_LEFT:
                 self.l_cards_on_left_lane_player.append(c)
                 self.l_left_cards_can_attack.append(c)
@@ -828,7 +1239,7 @@ class State:
             if i < n_cards:
                 s += ","
 
-        for j in range(i+1, n_cards+1):
+        for j in range(i + 1, n_cards + 1):
             s += no_card
             if j < n_cards:
                 s += ","
@@ -877,7 +1288,8 @@ class Agent:
         for i in range(card_count):
             card_number, instance_id, location, card_type, cost, attack, defense, abilities, my_health_change, opponent_health_change, card_draw, lane = input().split()
             one_card = Card(int(card_number), int(instance_id), int(location), int(card_type), int(cost), int(attack),
-                                int(defense), abilities, (my_health_change), int(opponent_health_change), int(card_draw), int(lane))
+                            int(defense), abilities, (my_health_change), int(opponent_health_change), int(card_draw),
+                            int(lane))
             l_cards.append(one_card)
 
         player1 = Player(player_health1, player_mana1, player_deck1, player_rune1, player_draw1)
@@ -909,7 +1321,7 @@ class Agent:
     # IA for battle
     # ----------------------------------------------
     def ia_battle(self):
-        self.summon_strategy = random.randint(1, 6)
+        self.summon_strategy = random.randint(1, 33)
         self.attack_strategy = random.randint(1, 2)
         turn = Turn(self.state, self.summon_strategy, self.attack_strategy)
         if len(turn.l_turn) == 0:
@@ -921,7 +1333,7 @@ class Agent:
             print(turn_string)
 
     # ----------------------------------------------
-    #Calculate reward
+    # Calculate reward
     # ----------------------------------------------
     def reward(self):
         return self.state.player1.hp - self.last_state.player1.hp + self.last_state.player2.hp - self.state.player2.hp
@@ -938,7 +1350,6 @@ class Agent:
         return s
 
 
-
 if __name__ == '__main__':
     agent = Agent()
     i_turn = 1
@@ -950,8 +1361,8 @@ if __name__ == '__main__':
         agent.read_input()
         agent.act()
         if NN and i_turn > 31:
-                nn_str = agent.print_NN()
-                nn_file.write(nn_str + '\n')
-                nn_file.flush()
+            nn_str = agent.print_NN()
+            nn_file.write(nn_str + '\n')
+            nn_file.flush()
         i_turn += 1
 
