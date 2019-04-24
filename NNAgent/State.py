@@ -26,6 +26,9 @@ class State:
         self.l_actions = []
         self.l_cards_on_player_hand = []          # list of cards on player hand
         self.l_guard_creatures_on_player_hand = []  # list of guard creatures on player hand
+        self.l_green_objects_on_player_hand = []  # list of green objects on player hand
+        self.l_blue_objects_on_player_hand = []  # list of blue objects on player hand
+        self.l_red_objects_on_player_hand = []  # list of red objects on player hand
         self.l_cards_on_left_lane_player = []     # list of cards on the left side of the player board
         self.l_cards_on_left_lane_opponent = []   # list of cards on the left side of the opponent board
         self.l_cards_on_right_lane_player = []    # list of cards on the right side of the player board
@@ -59,6 +62,12 @@ class State:
                 self.l_cards_on_player_hand.append(c)
                 if c.card_type == self.TYPE_CREATURE and c.guard:
                     self.l_guard_creatures_on_player_hand.append(c)
+                if c.card_type == self.TYPE_GREEN:
+                    self.l_green_objects_on_player_hand.append(c)
+                elif c.card_type == self.TYPE_BLUE:
+                    self.l_blue_objects_on_player_hand.append(c)
+                elif c.card_type == self.TYPE_RED:
+                    self.l_red_objects_on_player_hand.append(c)
             elif c.location == self.LOCATION_PLAYER_SIDE and c.lane == self.LANE_LEFT:
                 self.l_cards_on_left_lane_player.append(c)
                 self.l_left_cards_can_attack.append(c)
